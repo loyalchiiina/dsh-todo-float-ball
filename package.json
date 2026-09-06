@@ -1,0 +1,53 @@
+{
+  "name": "dsh-todo-float-ball",
+  "version": "0.1.0",
+  "description": "DSH todo 悬浮球：常驻可拖动悬浮球实时显示当前会话 todo_write 任务清单进度（总数/完成数/进行中），Shadow DOM 样式隔离，点击折叠/展开完整清单，状态颜色（待办灰/进行中橙脉动/完成绿）。数据双路同步：MutationObserver 抓官方 todo 面板为主 + 拦截会话投影帧为辅。双端可用（Desktop 桌面端 + Web 网页端）。",
+  "type": "module",
+  "main": "lib/index.js",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/**/*.js",
+    "cordis.patch.yml",
+    "README.md",
+    "README.zh.md",
+    "CHANGELOG.md",
+    "docs/*.md",
+    "LICENSE"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/loyalchiiina/dsh-todo-float-ball.git"
+  },
+  "homepage": "https://github.com/loyalchiiina/dsh-todo-float-ball#readme",
+  "bugs": {
+    "url": "https://github.com/loyalchiiina/dsh-todo-float-ball/issues"
+  },
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "todo",
+    "悬浮球",
+    "float-ball",
+    "task-list",
+    "progress",
+    "ui"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [],
+      "platform": "web"
+    }
+  }
+}
