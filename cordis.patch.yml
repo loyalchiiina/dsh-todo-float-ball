@@ -1,0 +1,8 @@
+# dsh-todo-float-ball — floating ball showing live todo_write progress.
+# Pure client-side plugin: the visual work lives in lib/client.js (mounted by
+# the client-modules system once the host activates). The host half only
+# registers a loopback-only health route so the bundle has a real cordis
+# activate. No host services are required at runtime.
+- insert:
+    - id: dsh-todo-float-ball
+      name: dsh-todo-float-ball
