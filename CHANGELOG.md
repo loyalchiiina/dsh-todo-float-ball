@@ -3,6 +3,19 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.0] - 2026-09-07
+
+### Added
+
+- **Inline conversation rename from the ball**:
+  - click the conversation title in the panel header (or the ✏️ button on a
+    pinned row) to edit its name in place — Enter commits, Esc cancels;
+  - goes through the official session rename API (`session.rename` from
+    `dsh-client-runtime`), so the change is the same as renaming the
+    conversation in DSH itself: the sidebar, the projection store and the
+    ball all update together;
+  - works on the current session and on pinned sessions.
+
 ## [0.3.0] - 2026-09-07
 
 ### Fixed
