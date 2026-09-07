@@ -3,6 +3,30 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.0] - 2026-09-07
+
+### Fixed
+
+- **Data layer rebuilt on the official `sessions` service** (the root fix):
+  - previous versions tapped `window.fetch`/`WebSocket`, but DSH Desktop's
+    connection runs through the shell's `__DSH_TRANSPORT__` (Electron
+    `net.fetch` + renderer access header) — page-level taps never saw a
+    single frame, so the ball only ever showed collapsed-panel skeleton
+    placeholders and never followed session switches;
+  - now the plugin injects the official `sessions` service (provided by
+    `dsh-client-runtime`) and reads its list snapshot directly: every
+    session's `projectionValues.todos` and `displayTitle`, plus the current
+    session id and a subscribe() — zero interception, host-computed data;
+  - session switching now follows instantly (the snapshot's `current` field
+    is the authoritative active-session signal);
+  - pinned conversations read real per-session projection data instead of
+    guesses;
+  - the DOM observer remains as a fallback only when the sessions service
+    is unavailable; collapsed-count skeletons are now clearly marked and
+    never overwrite real data.
+- Requires `dsh.client.inject: ["@deepseek-ai/dsh-client-runtime"]` — a
+  host restart is needed when upgrading from <= 0.2.0.
+
 ## [0.2.0] - 2026-09-07
 
 ### Added
