@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [0.8.0] - 2026-09-08
 
+> Published: 2026-09-08. Repository first created 2026-09-06 (v0.1.0 skeleton); v0.8.0 ships six skins, multi-session monitoring, inline rename, capsule mode and durable persistence.
+
 ### Added
 
 - **Nebula triple-variant** (user: 都保留 — keep all three texture
