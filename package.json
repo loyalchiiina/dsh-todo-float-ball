@@ -1,6 +1,6 @@
 {
   "name": "dsh-todo-float-ball",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "DSH todo 悬浮球：常驻可拖动悬浮球实时显示当前会话 todo_write 任务清单进度（总数/完成数/进行中），Shadow DOM 样式隔离，点击折叠/展开完整清单，状态颜色（待办灰/进行中橙脉动/完成绿）。数据双路同步：MutationObserver 抓官方 todo 面板为主 + 拦截会话投影帧为辅。双端可用（Desktop 桌面端 + Web 网页端）。",
   "type": "module",
   "main": "lib/index.js",

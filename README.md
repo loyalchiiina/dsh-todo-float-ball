@@ -29,6 +29,16 @@ It is a pure, read-only companion: the plugin never modifies the official panel,
 | Shadow DOM isolation | All UI lives inside an open Shadow DOM with `all:initial` — no style leaks in or out, immune to theme/skin plugins |
 | Dual-end support | Works in DSH Desktop (Electron window) and the web UI (browser) with the same code, because both render the same page; the UI mounts on `<html>` to dodge `transform`-related `position:fixed` breakage |
 | Privacy-friendly | Zero telemetry, zero data upload. The only host-side surface is a loopback-only health route (`/dsh-todo-float-ball/health`) |
+| **Discipline injection (v0.9.0)** | The host injects 5 hardest todo rules (~340 chars, `order=190`) into the system prompt of **every session** — **works as soon as the plugin is installed, no skill needs to be loaded**; turn it off with `injectDiscipline: false` |
+
+## Discipline injection (v0.9.0)
+
+DSH skills are **loaded on demand**: a session that never loads the `todo-show-discipline` skill carries no todo rules at all. Since v0.9.0 the host half injects a stable "todo discipline" section into every session's system prompt, so **installing the plugin is enough** — independent of which skill got loaded, which preset is active, and whether you run Desktop or the web UI.
+
+- **ON by default** (no `config` row means ON).
+- To turn it off: add `config: { injectDiscipline: false }` to this plugin's row in `cordis.patch.yml` (or your profile's patch layer), then **restart DSH**.
+- Only an explicit boolean `false` disables it; `"false"` / `0` / typos / a missing `config` all keep it ON (guards against accidental shutdown).
+- The injected text is deliberately short (a system-prompt section costs tokens in every session); the full rules stay in the `todo-show-discipline` skill, which is disabled for model invocation by default once this plugin is installed, and can be re-enabled if you uninstall the plugin.
 
 ## Install
 

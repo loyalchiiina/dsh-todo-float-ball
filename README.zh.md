@@ -29,6 +29,16 @@ DSH 里的 AI 在推进多步骤任务时，会用内置的 `todo_write` 工具�
 | Shadow DOM 样式隔离 | 全部 UI 在 open Shadow DOM 内并加 `all:initial`——样式不进不出，主题/皮肤插件互不干扰 |
 | 双端可用 | DSH Desktop 桌面端（Electron 窗口）与网页端（浏览器）同一份代码通用；UI 挂载在 `<html>` 根节点，规避 `transform` 导致的 `position:fixed` 失效 |
 | 隐私友好 | 零遥测、零数据上传。宿主端只注册一个仅限本机回环访问的健康检查路由（`/dsh-todo-float-ball/health`） |
+| **纪律注入（v0.9.0）** | 宿主端向**每次会话的系统提示**注入 5 条最硬的 todo 纪律（约 340 字，`order=190`）——**装上插件即生效，无需加载任何技能**；可用 `injectDiscipline: false` 关闭 |
+
+## 纪律注入（v0.9.0）
+
+DSH 的技能是**按需加载**的：一个会话若从未加载 `todo-show-discipline` 技能，就完全不带 todo 纪律。v0.9.0 起，宿主端会向每次会话的系统提示注入一段稳定的「todo 纪律」段落，因此**装上插件就等于纪律常驻**——与技能是否加载、用哪个预设、桌面端还是网页端都无关。
+
+- 默认**开启**（不写 `config` 即为开）。
+- 关闭：在 `cordis.patch.yml`（或 profile 的 patch 层）给本插件加 `config: { injectDiscipline: false }`，**重启 DSH 生效**。
+- 只有**显式布尔 `false`** 才关闭；`"false"` / `0` / 拼错 / 缺 `config` 一律保持开启（防误关）。
+- 注入文本刻意精简（系统提示每会话都占 token），完整规则仍留在 `todo-show-discipline` 技能里；该技能在装了本插件后默认不再随会话加载（`disable-model-invocation: true`）以避免重复占 token，未装本插件时可恢复启用。
 
 ## 安装
 

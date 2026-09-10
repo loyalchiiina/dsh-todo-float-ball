@@ -1,8 +1,29 @@
 # dsh-todo-float-ball — floating ball showing live todo_write progress.
-# Pure client-side plugin: the visual work lives in lib/client.js (mounted by
-# the client-modules system once the host activates). The host half only
-# registers a loopback-only health route so the bundle has a real cordis
-# activate. No host services are required at runtime.
+# Dual-half plugin:
+#   * the host half (lib/index.js) registers a loopback-only health route AND a
+#     short "todo discipline" system-prompt section (ctx.systemPrompt.section),
+#     so the todo rules are resident in every session/preset without loading the
+#     `todo-show-discipline` skill (skills load on demand, a prompt section does
+#     not);
+#   * the client half (lib/client.js) draws the floating ball, mounted by the
+#     client-modules system once the host activates.
+#
+# Config switch `injectDiscipline` (default: true — also the explicit value
+# below, so this row is the single place to flip it).
+# Set it to false to stop injecting the prompt section, e.g. when you prefer the
+# `todo-show-discipline` skill to be the only discipline source:
+#
+#   - insert:
+#       - id: dsh-todo-float-ball
+#         name: dsh-todo-float-ball
+#         config:
+#           injectDiscipline: false
+#
+# Only an explicit boolean false disables the section (no empty-text section is
+# registered in that case); any other value, or no config row at all, keeps the
+# injection ON. The floating ball and the health routes are unaffected either way.
 - insert:
     - id: dsh-todo-float-ball
       name: dsh-todo-float-ball
+      config:
+        injectDiscipline: true

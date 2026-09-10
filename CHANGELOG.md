@@ -3,6 +3,48 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.9.0] - 2026-09-10
+
+> Local-only release (not published to npm yet). Adds an optional, ON-by-default
+> system-prompt injection so the todo rules are resident in every session even
+> when the `todo-show-discipline` skill is never loaded.
+
+### Added
+
+- **Host half now injects a "todo discipline" system-prompt section**
+  (user request: the todo 铁律 kept failing because skills are loaded on demand —
+  a session that never loads the skill never carries the rules). `lib/index.js`
+  adds `systemPrompt` to `inject` and registers
+  `ctx.systemPrompt.section({ name: "todo-discipline", order: 190, text })`,
+  disposed through `ctx.effect(...)` exactly like `dsh-taskboard`'s protocol
+  section (`order: 180`). Order 190 keeps the two work-discipline blocks
+  adjacent inside the built-in policy band (`DEPLOYMENT_PERSONA=0` →
+  `PLAN_POLICY=500`) and leaves 181..189 free for future sections.
+  The injected text is 362 characters (187 CJK) and carries only the 5 hardest
+  rules — the long-form rules stay in the `todo-show-discipline` skill.
+  Works on both the desktop and the web profile, and across presets, because it
+  is a plugin/host capability rather than a skill.
+- **Config switch `injectDiscipline` (default `true`)**: set
+  `config: { injectDiscipline: false }` on the plugin's bundle-patch row to skip
+  the section entirely (no empty-text section is registered). Only an explicit
+  boolean `false` disables it. Ships as `config: { injectDiscipline: true }` in
+  `cordis.patch.yml`.
+- `dev-verify-inject.cjs`: offline verifier that loads the real ESM host half and
+  drives `apply()` with a fake cordis context — asserts exports, inject list,
+  section name/order/text budget, the on/off switch behaviour, and that both
+  loopback health routes still register and answer 200/403.
+
+### Changed
+
+- `package.json` version 0.8.0 → 0.9.0 (local build ahead of the published
+  0.8.0, so a plugin-manager "update" cannot silently downgrade it).
+
+### Unchanged (verified)
+
+- `lib/client.js` display logic untouched; `/dsh-todo-float-ball/health` and
+  `/dsh-todo-float-ball/client-alive` behaviour and the loopback-only guard
+  unchanged.
+
 ## [0.8.0] - 2026-09-08
 
 > Published: 2026-09-08. Repository first created 2026-09-06 (v0.1.0 skeleton); v0.8.0 ships six skins, multi-session monitoring, inline rename, capsule mode and durable persistence.
