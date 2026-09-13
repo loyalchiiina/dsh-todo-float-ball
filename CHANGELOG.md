@@ -3,6 +3,159 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.10.0] - 2026-09-13
+
+> Local-only release. A major client-half UX overhaul around session history:
+> merged snapshots no longer wipe older todos, the ball's counters now mean
+> "the current plan", and everything older is an archived, foldable,
+> cleanable, restorable, copyable layer that never leaks into the numbers.
+
+### Fixed
+
+- **History merge — old tasks no longer disappear** (`lib/client.js`,
+  `setSessionTodos`). Snapshots were merged into history by replacing the
+  per-session bucket with the newest snapshot wholesale, so any task absent
+  from the new snapshot vanished from the panel. A snapshot is now stored as
+  the leading `snapLen` items of the bucket and previous records whose items
+  are not contained in the new snapshot are appended after it — the current
+  plan always renders first and intact, older items survive as archive rows
+  and are never resurrected into the live counts. This also root-fixes the
+  user-reported regression introduced by the 0.9.1 removal of the
+  monotonic-progress guard (a legitimate "fewer done items" snapshot used to
+  erase history; it now simply re-defines the snapshot prefix).
+- **Statistics — the ball counts only the current plan** (`lib/client.js`,
+  `snapshotList()` + all render paths). Ball-face `done/total`, the progress
+  ring, the header summary, and the "N items left" notice all previously
+  counted merged history rows, so finished archive entries inflated the
+  numbers and the ring never returned to 0/0 after a plan was replaced. All
+  four now read exclusively the latest snapshot; history is a pure archive
+  with no effect on any counter.
+- **2s safety-net poll no longer undoes user hides** (`lib/client.js`).
+  Signature dedup moved ahead of the visibility filter application, so the
+  periodic `syncFromSessions()` refresh can no longer resurrect rows the
+  user hid a second earlier.
+- Removed the panel-footer recommendation line for the third-party plugin
+  `dsh-client-auto-continue` (user request: no third-party plugin ads).
+
+### Added
+
+- **Per-row hide (✕)** (`lib/client.js`, `HIDE_KEY`). Every history row gets
+  an ✕ button (shown on hover) that hides it at the display layer only.
+  Hidden ids are stored per session in
+  `localStorage["dsh-todo-float-ball-hidden-v1"]`; the data layer, the
+  signature and the merge logic see zero difference.
+- **Independent history fold rows** (`lib/client.js`, Plan-A3/A3.1). Two
+  separate collapse rows — `▾ Completed history (N)` and
+  `▸ Abandoned history tasks (M)` — each counted from its own status set and
+  collapsed by default; the latest snapshot always renders fully expanded.
+  The per-session bucket gained a `snapLen` field to mark the snapshot
+  prefix (also used by the statistics fix above).
+- **Batch cleanup (🧹)** (`lib/client.js`, Plan-A5). Each fold row carries a
+  🧹 button that hides everything in that fold, plus a
+  `🧹 Clear all history (X)` row that hides both folds at once.
+- **Row copy button (📋)** (`lib/client.js`, Plan-A6). Every row gets a 📋
+  button that copies the full task text from a `data-copy` attribute — not
+  the 80-char display truncation — via `execCommand('copy')` first with a
+  clipboard-API fallback, and gives a real ✓/⚠ feedback.
+- **One-click restore (♻️)** (`lib/client.js`, Plan-A7). A
+  `♻️ Restore all hidden history (X)` row appears only while at least one
+  row of the session is hidden and unhides everything at once (the inverse
+  of ✕/🧹).
+- **Pinned sessions: per-row hide without cross-session leaks**
+  (`lib/client.js`, Plan-A2.2). Rows inside a pinned (📌) session list can be
+  hidden independently: pinned `<ul>`s carry a `data-ownsid` attribute and
+  `sessionTodosVisible()` filters per owning session, so a hidden id stored
+  under session A can never hide a row rendered for session B.
+
+### Changed
+
+- `lib/client.js` header comment `v0.9.1` → `v0.10.0`.
+- `package.json` version 0.9.1 → 0.10.0.
+- Client-half changes only; the host half (`lib/index.js`,
+  `cordis.patch.yml`, discipline injection, health routes) is unchanged.
+
+## [0.9.1] - 2026-09-12
+
+> Local-only release. Fixes the two ways the ball could sit on stale todo data,
+> and makes the plugin usable straight after install with no configuration step.
+
+### Fixed
+
+- **Refresh defect 1 — the progress-regression guard is gone**
+  (`lib/client.js`, `setSessionTodos`). `todo_write` is a whole-list
+  replacement, so a fresh snapshot may legitimately carry FEWER completed items
+  than the previously rendered one (list re-organised, a status re-adjusted, an
+  item re-opened, a round rewriting the plan). The old plan-aware monotonic
+  guard compared done-counts within an identical content set and silently
+  discarded those snapshots as "stale", which is exactly why the ball kept
+  showing outdated progress. A new snapshot now always wins; the existing
+  signature (`status|content` join) check remains the only dedupe, so an
+  unchanged payload still costs nothing.
+- **Refresh defect 2 — the 2s watcher now pulls todo data**
+  (`lib/client.js`, `watchBallVisibility`). The interval only refreshed ball
+  visibility and the theme, never the todos: if the
+  `ctx.sessions.list.subscribe()` callback stopped firing (shell re-render,
+  dropped projection frame, remount), the ball stayed on stale data until a
+  manual page reload. `syncFromSessions()` is now called from that tick as a
+  safety net. It stays cheap by construction: `setSessionTodos()` returns early
+  on an identical signature and `syncFromSessions()` only re-renders when
+  something actually moved (`setSessionTodos` now reports whether it accepted a
+  snapshot).
+
+### Added
+
+- **Install-and-go defaults** (`lib/client.js`: `DEFAULTS` + `getCfg` /
+  `peekCfg` / `ensureDefaultCfg`). Preferences live in `localStorage`, which is
+  per-origin — a fresh install, a new profile, a cleared browser profile, or a
+  changed port all start empty and used to require re-configuring by hand. Every
+  switch now carries a code default, seeded into `localStorage` once on first
+  run so the value also stays visible and editable afterwards:
+
+  | Key | Default |
+  |---|---|
+  | `dsh-tfb-ball-visible` | `1` (always visible) |
+  | `dsh-tfb-theme` | `graphite` |
+  | `dsh-todo-float-ball-capsule` | `0` (round ball, not pill) |
+  | `dsh-todo-float-ball-pos` | bottom-right for the current viewport |
+
+  `injectDiscipline` (host-side prompt section) already defaulted to `true` and
+  is unchanged. Seeding only ever writes an ABSENT key — an existing user's
+  stored choice is never overwritten (covered by a regression test). The seeded
+  position is clamped into the viewport, and the restore path still falls back to
+  the CSS default when a stored point no longer fits, so a stale seed cannot park
+  the ball off-screen.
+
+### Changed
+
+- `lib/client.js` header comment `v0.3.0` → `v0.9.1` (it had drifted from
+  `package.json` while the data layer was rebuilt on the official `sessions`
+  service; the historical `v0.3.0 —` note below it is kept intentionally).
+- Theme handling collapsed onto one `isTheme()` predicate and `getCfg`, replacing
+  three copies of the same skin whitelist (`loadTheme`, `setTheme`,
+  `applyThemeNow`).
+- `package.json` version 0.9.0 → 0.9.1.
+
+### Verified
+
+- `node --check lib/client.js` passes; the file stays UTF-8 **without BOM**
+  (BOM is what makes DSH report `Unexpected token 'ï¿½'`).
+- New `dev-verify-refresh.cjs` (run: `node dev-verify-refresh.cjs lib/client.js`)
+  drives the real browser bundle through its `__ModuleLoader__` factory under a
+  DOM/localStorage stub: 14/14 checks pass on 0.9.1, while the same probe on the
+  pre-0.9.1 build fails exactly on the two refresh defects and the missing seeds
+  (7/14) — so the tests demonstrably detect the bugs they fix. It also asserts
+  that stored preferences are never overwritten by the seeding.
+- `injectDiscipline` (host prompt section) is unchanged and still `true` in
+  `cordis.patch.yml`.
+
+### Notes
+
+- Client-half changes only (`lib/client.js`); the host half (`lib/index.js`,
+  the discipline prompt section and the loopback health routes) is untouched.
+- `syncFromSessions()` gained a `currentSessions` null-guard, because the 2s
+  watcher now calls it unconditionally even when the sessions service is absent.
+
+
 ## [0.9.0] - 2026-09-10
 
 > Local-only release (not published to npm yet). Adds an optional, ON-by-default
