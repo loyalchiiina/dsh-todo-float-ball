@@ -69,10 +69,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
-- `lib/client.js` header comment `v0.9.1` → `v0.10.0`.
 - `package.json` version 0.9.1 → 0.10.0.
 - Client-half changes only; the host half (`lib/index.js`,
   `cordis.patch.yml`, discipline injection, health routes) is unchanged.
+- The `lib/client.js` header comment still reads `v0.9.1` (cosmetic drift;
+  the authoritative version is `package.json`).
 
 ## [0.9.1] - 2026-09-12
 
