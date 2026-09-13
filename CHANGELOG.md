@@ -29,11 +29,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   conversation no longer expands it in every other one; the pinned panels and
   the current panel now share the same per-sid buckets (the Plan-A8
   `pinnedHistOpen` / `pinnedOpenHistOpen` maps are gone).
-- **Fold / 🧹 / ♻️ controls act on their own session**
-  (`lib/client.js`, `actionSid()` + `data-ownsid`). Those rows used to resolve
-  the *current* session, so a 🧹 clicked inside a pinned panel cleared the
-  wrong list. Every action row is tagged with the sid it was rendered for;
-  `ACT_ALIAS` keeps the legacy Plan-A8 action names working.
+- **Fold / 🧹 / ♻️ controls carry the session they belong to**
+  (`lib/client.js`, `actionSid()` + `data-ownsid`). Now that one renderer serves
+  both list kinds, every action row is tagged with the sid it was rendered for
+  and the dispatcher resolves it (`data-ownsid` → legacy `data-sid` → the
+  current session as the last fallback), so a control inside a pinned panel can
+  never act on the current list. `ACT_ALIAS` maps the legacy Plan-A8 action
+  names onto the unified ones, so nothing that used to work stops working.
 - **Pinned header counts report the current plan only**
   (`lib/client.js`, `countsOf(snapshotRowsOf(sid))`). The pinned row's
   done/total previously folded archived history into the numbers, breaking the
