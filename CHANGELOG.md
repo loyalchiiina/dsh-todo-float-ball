@@ -3,6 +3,46 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.11.1] - 2026-09-13
+
+> Maintenance release: typography cleanup only. No behaviour, API or UI change
+> of any kind — the shipped `lib/client.js` is the same program with the
+> whitespace residue of the 0.11.0 scripted edits taken out.
+
+### Fixed
+
+- **Header comment reported the wrong version** (`lib/client.js`, top-of-file
+  banner). The banner still said `v0.9.1` after the package had moved through
+  0.10.0 and 0.11.0; it now reads `v0.11.1`. Comment text only — nothing here
+  is read at runtime.
+
+### Changed
+
+- **Blank-line residue compressed** (`lib/client.js`). The scripted edits that
+  produced 0.11.0 (Plan-A9 / A10 / A11) left 47 stray blank lines behind: 43
+  inside `renderList()` — one between every statement, and even between the
+  continuation lines of a shared comment — 2 whitespace-only lines inside the
+  `buildUI()` panel-markup concatenation, and 2 extras in a triple blank run
+  between `renderList()` and `renderPinned()`. Blank lines 104 → 57,
+  trailing whitespace 2 → 0, and no blank run longer than a single line is left.
+  The surviving blank lines are the 57 that separate top-level declarations and
+  the comment-led groups inside `buildUI()` — the file's original style.
+- **Two-statement lines split** (`lib/client.js`). Three lines each carried two
+  statements: `ui.ctitle.textContent = …` followed by the `ui.capCur` caption
+  update (Plan-A11), `ui.pinSec = …` followed by `ui.capCur = …`, and
+  `e.stopPropagation();` followed by `var li = …`. Every statement now owns
+  its line.
+- **Leftover empty CSS element removed** (`lib/client.js`, `cssText()`). The
+  column-caption edit left an `""` element in the shared CSS rule array, which
+  joined into a stray empty line in the generated stylesheet. The element line
+  is gone; the surrounding rules are byte-identical.
+- **Zero semantic change, verified mechanically.** A whitespace-insensitive
+  token comparison of `lib/client.js` before and after (code tokens, string
+  literals and comments kept separately) shows exactly two differences: the
+  header version text and the deleted `""` CSS element. `node --check` passes,
+  and both regression harnesses are unchanged — `dev-verify-refresh.cjs`
+  14/14 and `dev-verify-merge.cjs` 59/59.
+
 ## [0.11.0] - 2026-09-13
 
 > Client-half release. Pinned (📌) sessions now render exactly like the current
