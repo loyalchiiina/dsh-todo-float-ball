@@ -30,6 +30,33 @@ It is a pure, read-only companion: the plugin never modifies the official panel,
 | Dual-end support | Works in DSH Desktop (Electron window) and the web UI (browser) with the same code, because both render the same page; the UI mounts on `<html>` to dodge `transform`-related `position:fixed` breakage |
 | Privacy-friendly | Zero telemetry, zero data upload. The only host-side surface is a loopback-only health route (`/dsh-todo-float-ball/health`) |
 | **Discipline injection (v0.9.0)** | The host injects 5 hardest todo rules (~340 chars, `order=190`) into the system prompt of **every session** — **works as soon as the plugin is installed, no skill needs to be loaded**; turn it off with `injectDiscipline: false` |
+| **History archive & panel tools (v0.10.0)** | Merged snapshots no longer wipe older todos — they become a foldable history archive; per-row ✕ hide, two independent fold rows, 🧹 batch cleanup, ♻️ one-click restore, 📋 full-text copy; all counters reflect only the latest snapshot |
+
+## History & panel management (v0.10.0)
+
+A plan is rewritten many times during a long task. From v0.10.0 the panel keeps
+the **latest snapshot** as the live list and archives everything older instead
+of discarding it:
+
+- **Merge, not replace** — a fresh snapshot updates the leading `snapLen` rows
+  of the session bucket; previous items that are not part of the new snapshot
+  are appended after it, so old tasks never disappear.
+- **Statistics mean "the current plan"** — the ball face (`done/total`), the
+  progress ring, the header summary and the "N items left" notice count only
+  the latest snapshot (`snapshotList()`); history is a pure archive.
+- **Per-row hide (✕)** — hover a history row and click ✕ to hide it. Hidden
+  rows live in `localStorage` (`dsh-todo-float-ball-hidden-v1`, per session);
+  the data layer is untouched. Pinned (📌) sessions hide rows independently —
+  a hidden row in session A can never hide a row in session B (`data-ownsid`).
+- **Two fold rows** — `▾ Completed history (N)` and `▸ Abandoned history
+  tasks (M)` are independent collapsible rows (collapsed by default); the
+  latest snapshot always renders fully expanded.
+- **Batch cleanup (🧹)** — each fold row has a 🧹 button to clear that fold,
+  plus a `🧹 Clear all history (X)` row that hides both folds at once.
+- **One-click restore (♻️)** — `♻️ Restore all hidden history (X)` appears
+  only while something is hidden and unhides everything in the session.
+- **Row copy (📋)** — copies the *full* task text (not the 80-char display
+  truncation), with a real ✓/⚠ feedback.
 
 ## Discipline injection (v0.9.0)
 
