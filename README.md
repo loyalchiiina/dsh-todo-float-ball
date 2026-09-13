@@ -31,6 +31,29 @@ It is a pure, read-only companion: the plugin never modifies the official panel,
 | Privacy-friendly | Zero telemetry, zero data upload. The only host-side surface is a loopback-only health route (`/dsh-todo-float-ball/health`) |
 | **Discipline injection (v0.9.0)** | The host injects 5 hardest todo rules (~340 chars, `order=190`) into the system prompt of **every session** — **works as soon as the plugin is installed, no skill needs to be loaded**; turn it off with `injectDiscipline: false` |
 | **History archive & panel tools (v0.10.0)** | Merged snapshots no longer wipe older todos — they become a foldable history archive; per-row ✕ hide, two independent fold rows, 🧹 batch cleanup, ♻️ one-click restore, 📋 full-text copy; all counters reflect only the latest snapshot |
+| **Pinned-panel parity & layout switch (v0.11.0)** | 📌 pinned sessions render through the *same* history renderer as the current view (folds, 🧹, ♻️, per-session state and per-session action scoping); the panel header gained a ⇄ button to flip between a stacked layout and a side-by-side layout (left = current list, right = pinned sessions) with per-column captions |
+
+## Pinned sessions & panel layout (v0.11.0)
+
+- **One renderer, two lists** — the current conversation and every pinned (📌)
+  conversation are rendered by the same `historySectionHtml()` function: latest
+  snapshot flat, then `▾ Completed history (N)` and
+  `▸ Abandoned history tasks (M)`, each fold with its own 🧹, plus
+  `🧹 Clear all history` and `♻️ Restore all hidden history`. Pinned panels got
+  the last two rows for the first time in this release.
+- **Per-session state** — fold open/closed and hidden rows are keyed by session
+  id, so expanding or cleaning one conversation never moves another one; every
+  control carries the id of the list it was rendered for (`data-ownsid`).
+- **Stable snapshot boundary** — the snapshot/history split is taken on the raw
+  list and the hidden-row filter is applied afterwards, so hiding a snapshot row
+  can no longer drag an archived row into the live area or shift a fold count.
+- **⇄ layout switch** — stacked (current list above, pinned below) or
+  side-by-side (left current, right pinned). The preference is stored in
+  `localStorage["dsh-todo-float-ball-layout"]` and restored on load.
+- **Column captions** — in side-by-side mode the left column is captioned with
+  the current conversation title and the right one with `📌 固定会话`; in stacked
+  mode the captions stay hidden and nothing about the old layout changes.
+
 
 ## History & panel management (v0.10.0)
 
@@ -87,7 +110,7 @@ After the restart you should see the ball in the bottom-right corner. Verify the
 
 ```
 http://127.0.0.1:43120/dsh-todo-float-ball/health
-→ {"ok":true,"plugin":"dsh-todo-float-ball","version":"0.1.0"}
+→ {"ok":true,"plugin":"dsh-todo-float-ball","version":"<the installed package.json version>"}
 ```
 
 ## How it works

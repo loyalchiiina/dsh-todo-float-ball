@@ -3,6 +3,74 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.11.0] - 2026-09-13
+
+> Client-half release. Pinned (📌) sessions now render exactly like the current
+> view — one shared history renderer, per-session fold state, per-session
+> controls — and the panel gained a two-column layout switch with captions.
+
+### Fixed
+
+- **One shared history renderer for current and pinned lists**
+  (`lib/client.js`, `historySectionHtml(sid, list)`, Plan-A9). Pinned sessions
+  used to carry their own copy of the fold logic (Plan-A8) which had no
+  `🧹 Clear all history` row and no `♻️ Restore all hidden history` row. Both
+  list kinds are now produced by the same function, so the pinned panel and
+  the current panel are the same experience by construction, not by
+  duplication.
+- **Snapshot / history split ignores the hidden filter**
+  (`lib/client.js`, `snapshotRowsOf()` + `historySectionHtml()`). The split
+  was taken on the already filtered list, so hiding one snapshot row pulled an
+  archived row up into the flat area and shifted every fold boundary. The raw
+  (unfiltered) list is now cut at `snapLen` first and each part is filtered
+  afterwards — fold counts and boundaries are stable while you hide rows.
+- **Fold state is per session** (`lib/client.js`, `historyOpen` /
+  `historyOpenOpen` became sid-keyed maps). Expanding "已完成历史" in one
+  conversation no longer expands it in every other one; the pinned panels and
+  the current panel now share the same per-sid buckets (the Plan-A8
+  `pinnedHistOpen` / `pinnedOpenHistOpen` maps are gone).
+- **Fold / 🧹 / ♻️ controls act on their own session**
+  (`lib/client.js`, `actionSid()` + `data-ownsid`). Those rows used to resolve
+  the *current* session, so a 🧹 clicked inside a pinned panel cleared the
+  wrong list. Every action row is tagged with the sid it was rendered for;
+  `ACT_ALIAS` keeps the legacy Plan-A8 action names working.
+- **Pinned header counts report the current plan only**
+  (`lib/client.js`, `countsOf(snapshotRowsOf(sid))`). The pinned row's
+  done/total previously folded archived history into the numbers, breaking the
+  statistics rule established in 0.10.0.
+
+### Added
+
+- **Panel layout switch (⇄)** (`lib/client.js`, Plan-A10). A new ⇄ button in
+  the panel header toggles between the stacked layout (current list above,
+  pinned sessions below) and a side-by-side layout (left column = current
+  list, right column = pinned sessions). The choice is persisted in
+  `localStorage["dsh-todo-float-ball-layout"]`, restored on load, and the
+  panel repositions itself after the switch.
+- **Column captions in the side-by-side layout** (`lib/client.js`, Plan-A11).
+  Each column gets a caption line: the left one shows the current
+  conversation title (`▸ <title>`, kept in sync with the header title), the
+  right one shows `📌 固定会话`. In the stacked layout the captions are hidden,
+  so nothing changes there.
+
+### Changed
+
+- `package.json` version 0.10.0 → 0.11.0.
+- Client-half changes only; the host half (`lib/index.js`,
+  `cordis.patch.yml`, discipline injection, health routes) is unchanged.
+- `lib/client.js` is stored with LF line endings from this release (it matches
+  the byte-for-byte copy that actually runs here); no content change beyond
+  the fixes above.
+- Internal cleanup: the click dispatcher no longer carries an empty duplicate
+  `copyItem` branch that appeared while this batch was in flight (it never
+  shipped in a release; no user-visible effect).
+- The `lib/client.js` header comment still reads `v0.9.1` (cosmetic drift; the
+  authoritative version is `package.json`, and this file is published exactly
+  as deployed).
+- Regression baseline at release time: `node --check` clean, the local
+  DOM-stub probes passed 14/14 (refresh) and 59/59 (history merge / fold /
+  cleanup / restore) checks.
+
 ## [0.10.0] - 2026-09-13
 
 > Local-only release. A major client-half UX overhaul around session history:
