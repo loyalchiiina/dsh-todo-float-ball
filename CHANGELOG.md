@@ -3,6 +3,17 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## v0.12.1（2026-09-14）— 皮肤目录对比度修正
+- hintC 次要文本色对比度修正：08 极地冰川 / 09 霓虹脉搏 / 11 暗物质 / 17 方块像素 四主题与面板底色 WCAG 对比度不足 3:1，已调整到 ≥3.4（与 font/skill 球同步修改，三球共享目录保持一致）
+## v0.12.0（2026-09-14）— 三球统一 128 皮肤系统
+
+- 新增共享皮肤目录 `window.__DSH_BALL_SKINS`（与 dsh-skill-browser / dsh-font-enhancer 同一份目录）：128 款皮肤 = 审定方案 01-128（20 招牌特效 + 8 克制精选 + 100 中国传统色单色相）。
+- 🎨 皮肤菜单重构：按 分组（招牌特效/克制精选/浓郁深底/尘埃灰调/柔光深底/中性点缀/浅色纸面/经典）分组展示，带色点预览，可滚动。
+- 三球同步：共享 localStorage 键 `dsh-ball-skin`，任一处切换（Todo 面板 🎨 / 技能球面板设置 / 字体球面板 / DSH 设置页「悬浮球导航」下拉）三球+面板 UI 颜色一起换。
+- 面板全面皮肤化：背景/边框/文字/状态色/进度点/皮肤菜单全部跟随当前皮肤（旧 6 皮肤保留在「经典」分组，选经典时本球回到旧版外观）。
+- 兼容：旧 `dsh-tfb-theme` 键保留；`data-tfb-theme` 委托同时接受经典与 128 皮肤 id；轮询安全网同时盯共享键。
+- 原版保留：Todo 球 6 款旧皮肤在 🎨 菜单「经典」分组；技能球（原版星云紫）与字体球（原版暖极光）各加「原版（仅本球）」选项——选中回到原始外观，切任意 128 皮肤即恢复三球统一；在 DSH 设置页全局换肤会自动清除原版标记。
+
 ## [0.11.1] - 2026-09-13
 
 > Maintenance release: typography cleanup only. No behaviour, API or UI change
