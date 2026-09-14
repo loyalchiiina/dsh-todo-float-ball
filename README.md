@@ -90,6 +90,9 @@ DSH skills are **loaded on demand**: a session that never loads the `todo-show-d
 - Only an explicit boolean `false` disables it; `"false"` / `0` / typos / a missing `config` all keep it ON (guards against accidental shutdown).
 - The injected text is deliberately short (a system-prompt section costs tokens in every session); the full rules stay in the `todo-show-discipline` skill, which is disabled for model invocation by default once this plugin is installed, and can be re-enabled if you uninstall the plugin.
 
+## 🎨 Shared 128 ball skins (v0.12+)
+This ball shares one skin catalog (window.__DSH_BALL_SKINS, localStorage key dsh-ball-skin) with **dsh-skill-browser** and **dsh-font-enhancer**: switch a skin anywhere (panel 🎨 or DSH settings) and all three balls + their panels recolor in sync. The legacy 6 skins stay under the 经典 group; each sibling ball also has a per-ball classic escape hatch.
+
 ## Install
 
 The plugin is a standard DSH npm package (`dsh.bundle` self-declared). Two ways:
