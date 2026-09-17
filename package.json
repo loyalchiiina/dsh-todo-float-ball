@@ -1,7 +1,7 @@
 {
   "name": "dsh-todo-float-ball",
-  "version": "0.12.2",
-  "description": "让 AI 的任务清单常驻在你眼前：一颗可拖动的悬浮球实时显示当前会话 todo_write 的完成数/总数与进度环，点开看完整清单（已完成绿勾/进行中橙脉动/待办灰），支持多会话固定同盯、行内重命名、胶囊模式、六款皮肤与 Shadow DOM 样式隔离。数据双路同步（MutationObserver 抓官方面板 + 拦截会话投影帧）。桌面端 + 网页端双端可用。| Keep the agent\u0027s todo checklist always on screen: a draggable ball showing live done/total with a progress ring, expandable into the full list with status colours, multi-session pinning, inline rename, capsule mode, six skins and Shadow DOM isolation. Dual-channel sync via the official todo panel plus session projection frames.",
+  "version": "0.12.3",
+  "description": "让 AI 的任务清单常驻眼前：悬浮球显示完成数/总数与进度环，点开看完整清单，支持多会话固定、胶囊模式、六款皮肤。| Keep the agent's todo list always visible: a draggable ball with live done/total and progress ring, expandable list, multi-session pins, six skins.",
   "type": "module",
   "main": "lib/index.js",
   "sideEffects": false,
