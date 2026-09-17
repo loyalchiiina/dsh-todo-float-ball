@@ -1,15 +1,32 @@
 # Changelog
 
-
-## v0.12.2（2026-09-17）— 文档与描述双语化
-
-- **package.json description 改为中英双语卖点式**：先说价值（让 AI 的任务清单常驻在你眼前），再列能力（实时进度环 / 完整清单三态 / 多会话固定 / 行内重命名 / 胶囊模式 / 六款皮肤 / Shadow DOM 隔离 / 双端可用）。
-- **README 顶部新增宣传区**：中英双钩子 + 悬浮球展开态与收起态两张截图 + 图注；`README.md`（英）与 `README.zh.md`（中）同步更新。原有功能清单表格与全部技术文档原样保留。
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## v0.12.1（2026-09-14）— 皮肤目录对比度修正
-- hintC 次要文本色对比度修正：08 极地冰川 / 09 霓虹脉搏 / 11 暗物质 / 17 方块像素 四主题与面板底色 WCAG 对比度不足 3:1，已调整到 ≥3.4（与 font/skill 球同步修改，三球共享目录保持一致）
+## v0.13.0（2026-09-17）— 硬约束：每轮首个工具调用必须是 todo_write
+
+- 🔴 **新增硬门（`lib/index.js` host half）**：`ctx.on("tools/pre-execute")` 拦截 —— **每个回复 turn 的第一个工具调用若不等于 `todo_write`，直接返回 `{kind:"deny", reason:"…"}`**，模型读到拒绝原因后会立即补写 todo 清单。
+  - **为什么**：注入的纪律文本（v0.9.0 起）只是"建议"，实测在长任务/自动续轮时会漏写（作者本人 2026-09-17 连续多轮只顾查进度忘了刷新 todo，悬浮球停留在旧清单）→ **文本管不住，改由工具调度层强制执行**。
+  - **判定原理**：`dsh-agent-loop` 先 append 持久事件 `tool/call`，再进入 `dsh-tools` 的 dispatch（`tools/pre-execute`）；因此门内看到「当前 turn 内 `tool/call` 恰好 1 个」= 本次即该 turn 首个工具调用。
+  - **安全设计**：整段 try/catch，取不到 `exec.agent.session.snapshotEvents()` 等任何异常形态一律 `next()` 放行 —— 判定失效只会"门不生效"，**不会拦正常工作**。
+  - **开关**：插件 config `enforceFirstTodoWrite: false` 可关闭（默认开启）。
+- 🔴 **修复：package.json 中文编码损坏**。上一版（0.12.1）用 PowerShell `Get-Content -Raw`（按 GBK 解码）+ `WriteAllText`（UTF-8 写）改版本号 → 中文 description 全变乱码且引号被截断 → **JSON 非法、`node --check` 报 `ERR_INVALID_PACKAGE_CONFIG`**。已从 `package.json.bak-20260914` 恢复并用 **Python `json`（UTF-8 显式）** 重写（现 1506 B，合法）。损坏副本留存 `package.json.broken-20260917` 供对照。
+  - **教训（通用）**：改含中文的 JSON/配置文件**一律用 Python `io.open(..., encoding="utf-8")` + `json`**，**禁止** PowerShell `Get-Content -Raw` + `WriteAllText` 组合阅读写回（编码不一致必坏）。
+- 备份：`lib/index.js.bak-20260917-todogate`。
+- 生效：host half 改动需**重启 DSH** 后加载。
+
+## v0.12.1（2026-09-17）— 胶囊展开不再只有数字
+
+- 🔴 **修复：胶囊（capsule）模式在无「进行中」任务时只显示裸数字**（用户实测反馈："展开的胶囊不显示待办的具体事项内容只有数字"，表现为 `待办 4/5`）。根因：`lib/client.js` 胶囊 sub 文本三级逻辑只认 `in_progress`（运行中任务），当清单为「全部 completed + 部分 pending」时取不到运行任务 → 回退成 `待办 N/M`。
+- 修复：新增 **pending 兜底**——胶囊文本三级优先：①有进行中 → `▶ 任务文本`；②无进行中但有 pending → `○ 首个待办文本`；③全部完成 → `✓ 全部完成 N/N`。数字仍保留在胶囊左侧 label（`4/5`），不再出现"只有数字没有内容"。
+- 备份：`lib/client.js.bak-20260917-capsule415`。验证：`node --check` 通过 + 复现脚本三例通过（`E:\DSHskills-test\_todo-plugin-fix-20260917\repro-415.js`）。
+- 生效：client-plugin HMR（需 `pnpm run dev:web` 在跑）或刷新/重启 DSH。
+
+## [Unreleased] - 2026-09-17（本地改动，未发布）
+
+- 🔴 注入纪律新增第 6 条「正文待办必入清单」（用户强制）：回复正文出现「待办／待审批／还没弄的／未完成／后续要」事项，必须同轮同步追加进 todo 清单，禁止只写正文不进清单；正文待办与 todo 清单必须一致。背景：2026-09-17 实测正文列 3 项待办未入清单（agent 执行疏漏）→ 用户要求强化到插件本体而非技能层。
+- 备份：`lib/index.js.bak-20260917-todo6`。
+
 ## v0.12.0（2026-09-14）— 三球统一 128 皮肤系统
 
 - 新增共享皮肤目录 `window.__DSH_BALL_SKINS`（与 dsh-skill-browser / dsh-font-enhancer 同一份目录）：128 款皮肤 = 审定方案 01-128（20 招牌特效 + 8 克制精选 + 100 中国传统色单色相）。
