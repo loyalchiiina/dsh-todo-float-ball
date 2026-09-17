@@ -2,7 +2,17 @@
 
 **Keep your AI agent's task checklist always on screen — a floating progress ball for DeepSeek Harness (DSH).**
 
-English | [简体中文](README.zh.md)
+**让 AI 的任务清单跑出侧栏，常驻在你眼前。** · English | [简体中文](README.zh.md)
+
+![Expanded task panel](docs/images/todo-float-ball-expanded.png)
+
+> Expanded view: the `7/8` capsule shows overall progress; the main area lists every task by status (✓ done in green, ▶ in progress pulsing orange); collapsed history groups can be expanded; a footer warns `⚠ 1 task not finished`. On the right, the **Pinned Sessions** section tracks another conversation's checklist.
+> 展开态：`7/8` 进度胶囊 + 按状态列出的任务清单 + 历史分组折叠 + 底部未完成提醒；右侧「固定会话」区。
+
+![Collapsed ball](docs/images/todo-float-ball-collapsed.png)
+
+> Collapsed view: the ball shows `7/8` and keeps the checklist as a slim strip along the screen edge without blocking content.
+> 收起态：球体显示 `7/8`，清单以窄条贴边常驻，不挡内容。
 
 ## What is this?
 
