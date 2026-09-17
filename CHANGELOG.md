@@ -1,5 +1,10 @@
 # Changelog
 
+
+## v0.12.2（2026-09-17）— 文档与描述双语化
+
+- **package.json description 改为中英双语卖点式**：先说价值（让 AI 的任务清单常驻在你眼前），再列能力（实时进度环 / 完整清单三态 / 多会话固定 / 行内重命名 / 胶囊模式 / 六款皮肤 / Shadow DOM 隔离 / 双端可用）。
+- **README 顶部新增宣传区**：中英双钩子 + 悬浮球展开态与收起态两张截图 + 图注；`README.md`（英）与 `README.zh.md`（中）同步更新。原有功能清单表格与全部技术文档原样保留。
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
