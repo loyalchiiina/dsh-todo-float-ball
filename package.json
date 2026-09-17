@@ -20,7 +20,8 @@
     "README.zh.md",
     "CHANGELOG.md",
     "docs/*.md",
-    "LICENSE"
+    "LICENSE",
+    "docs/images/**"
   ],
   "license": "MIT",
   "repository": {
