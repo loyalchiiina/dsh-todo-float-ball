@@ -17,6 +17,50 @@ When an AI agent in DSH works on a multi-step task, it records its plan with the
 
 It is a pure, read-only companion: the plugin never modifies the official panel, the conversation, or any other plugin.
 
+## 功能总览 · At a glance（中英对照 / Bilingual）
+
+### Floating ball · 悬浮球
+
+| 中文 | English |
+|---|---|
+| 常驻可拖拽悬浮球（默认右下角），位置存 `localStorage` 并跨重启恢复，越界旧位置自动拉回 | Persistent draggable ball (default bottom-right); position saved to `localStorage` and restored across restarts, off-screen positions clamped back |
+| 球面实时显示 `done/total` + 当前进行中任务名（截断），随 todo_write 实时刷新 | Live `done/total` plus the active task's name on the ball face, updated in real time |
+| 状态颜色一眼可读：橙脉动=进行中 / 绿=全部完成 / 蓝=只有待办 / 灰=暂无清单 | Status colours at a glance: orange pulse = working, green = all done, blue = pending only, gray = no list |
+| 每项任务带图标与配色：✓ 完成（绿+删除线）、▶ 进行中（橙）、○ 待办（灰虚线） | Per-item icons & colours: ✓ done (green, strikethrough), ▶ in progress (orange), ○ pending (dashed gray) |
+
+### Panel & data · 面板与数据
+
+| 中文 | English |
+|---|---|
+| 点球折叠/展开面板，靠屏幕边缘自动翻侧 | Click to fold/expand; the panel flips sides near the screen edge |
+| 双路数据同步：A 路 MutationObserver 抓官方 todo 面板，B 路被动解析会话投影帧——官方面板折叠时也有完整清单 | Dual-channel sync: A) DOM observer on the official panel, B) passive session-projection parsing — full list even when the strip is collapsed |
+| Shadow DOM + `all:initial` 样式隔离，不进不出，主题/皮肤插件互不干扰 | Shadow DOM with `all:initial` — no style leaks in or out, immune to theme/skin plugins |
+| 桌面端（Electron）与网页端同一份代码双端可用 | One codebase for Desktop (Electron) and the web UI |
+
+### History & pinned sessions · 历史与固定会话
+
+| 中文 | English |
+|---|---|
+| 快照合并不再冲掉旧任务——旧任务进入历史归档区 | Snapshots merge instead of replacing — older todos become a history archive |
+| 行级 ✕ 隐藏、两个独立折叠行、🧹 批量清理、♻️ 一键恢复、📋 整行复制 | Per-row ✕ hide, two independent fold rows, 🧹 batch cleanup, ♻️ one-click restore, 📋 full-text copy |
+| 📌 固定会话与当前对话共用同一历史渲染器，状态按会话独立 | 📌 Pinned sessions render through the same history renderer, with per-session state |
+| ⇄ 布局切换：上下堆叠 ⇄ 左右并排（左当前列表、右固定会话，带列标题） | ⇄ layout switch: stacked ⇄ side-by-side (current + pinned columns with captions) |
+
+### Discipline injection · 纪律注入
+
+| 中文 | English |
+|---|---|
+| 宿主端向每次会话系统提示注入 todo 纪律段（order=190，约 340 字）——装上插件即生效，无需加载技能 | Host injects a stable todo-discipline section (order=190, ~340 chars) into every session — works the moment the plugin is installed |
+| 硬门：每轮首个工具调用若不是 todo_write 会被拒绝并提示补写（可用 `enforceFirstTodoWrite: false` 关闭） | Hard gate: the first tool call of each turn must be `todo_write` or it is denied (disable with `enforceFirstTodoWrite: false`) |
+| 只有显式布尔 `false` 才关闭；`"false"`/`0`/缺 config 均保持开启 | Only an explicit boolean `false` disables it; `"false"`/`0`/missing config keep it ON |
+
+### Skins & privacy · 皮肤与隐私
+
+| 中文 | English |
+|---|---|
+| 三球共享 128 款皮肤目录（含 6 款经典旧皮肤），任一处切换全同步 | Shares the 128-skin catalogue across the three balls (6 classic skins kept), synced everywhere |
+| 零遥测、零数据上传，仅一条本机回环健康路由 | Zero telemetry, zero data upload — just a loopback-only health route |
+
 ## Features
 
 | Feature | Detail |
