@@ -3,6 +3,41 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## v0.13.4（2026-09-28）— 修复「动画特效停止、切换皮肤失效」（v0.13.2 守卫拦得过宽）
+
+- 🔴 **症状**：悬浮球的呼吸/旋转/发光等动效不再动了；在设置里切换皮肤也
+  像是没生效（球不换样子、动画不重启）。
+- 🔴 **根因（由 v0.13.2 的防闪守卫引入）**：v0.13.2 为消除闪烁，在
+  `renderBall()` 开头加了「签名未变则直接 return」的守卫。但
+  `renderBall()` 里的
+  `ui.ball.className = "tfb-ball " + st.cls + ...`
+  **不只是写文本**：重写 `className` 会让引擎重新计算该元素的样式，
+  从而**重新武装 CSS 动画**，也是状态类（`tfb-active` / `tfb-done` /
+  `tfb-pending`）唯一的落点 —— 而所有动效（`tfbBreathe` 呼吸、
+  `tfbRimSpin` 边框旋转、`tfbGlow` 文字辉光、`tfb-pulse`、
+  `dshSkinSpin` 等 27 条 `animation:` 规则）全都挂在由它驱动的
+  `.tfb-ball` / `.tfb-orb-rim` / `.tfb-label` 上。
+  皮肤切换走 `applyThemeNow()`：替换 `<style>` 后调 `render()` —— 此时
+  可见数字往往没变，守卫直接 return，**新皮肤 CSS 注入成功但球从未被重新
+  装饰**，于是动画停在半途、换皮肤看起来毫无反应。
+- ✅ **修复｜给守卫加 `force` 旁路**：`renderBall(force)` / `render(force)`
+  在 `force` 为真时**跳过签名比对**，强制重写 `className` 与文本。
+  - **强制（re-decoration，必须写 DOM）**：`applyThemeNow()`（皮肤/主题
+    应用 → `render(true)`）、`buildUI()` 末尾的首次渲染（元素全新，
+    绝不能因上一个 DOM 的缓存签名而跳过）。
+  - **保持去抖（数据驱动，防闪）**：`syncFromSessions()` 的
+    `if (changed) render()`、2s 看门狗轮询 —— 都走普通 `render()`，
+    v0.13.2 的闪烁修复**完全保留**。
+- 🧪 **验证**：本轮新增 10 项回归（结构 6 项 + 行为 4 项：状态未变不重写 /
+  皮肤切换强制生效 / DOM 重建后首次必然装饰 / 状态变化正常更新）全绿。
+  前三轮 37 项（rc.2 主会话 7 项 + 闪烁 15 项 + 布局 15 项）**继续全绿**，
+  四个修复同时成立 —— 累计 **47/47**。
+  另做**逐项功能核对**（对原始 v0.13.0）：15 个功能面 / 68 个标记
+  （动画关键帧与挂载点、皮肤系统与切换通道、胶囊跑马灯、进度环、
+  面板折叠、固定会话、隐藏条目、持久化、数据双通道、内联重命名、拖动、
+  健康路由、布局切换）**丢失项 0**。
+  `node --check` 通过；无 BOM；括号配平；三处副本 SHA256 一致。
+  回滚锚点：`~/.dsh/backups/todo-client.js.*.bak-animfix-*`
 ## v0.13.3（2026-09-28）— 修复「两侧显示」布局在折叠/展开后丢失
 
 - 🔴 **症状**：在设置里开启「两侧显示」（左右分栏）后，**收起面板再展开，
