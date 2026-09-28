@@ -3,6 +3,41 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## v0.13.5（2026-09-28）— 修复「更换皮肤不生效」（潜伏已久的选择器错误）
+
+- 🔴 **症状**：在设置里点皮肤不换样子；展开/收起面板后也不刷新皮肤。
+- 🔴 **真根因（自 v0.9 起潜伏，与内核升级无关）**：`buildUI()` 构建 shadow
+  树时，样式表是挂在 **shadowRoot 直属**的：
+  ```
+  shadow.appendChild(style);     // <style> 在这里
+  shadow.appendChild(root);      // root === ui.root (".tfb-root")
+  ```
+  即 `<style>` 是 `ui.root` 的**兄弟节点**。而更新皮肤的代码写的是
+  ```js
+  var st = ui.root.querySelector("style");
+  if (st) st.textContent = cssText();
+  ```
+  `querySelector` **只在子树内查找**（不含自身与兄弟），因此这里**每次都
+  返回 null**，赋值分支从未执行过。
+- 🔴 **为什么以前"看起来能用"**：`hide()` 收起面板时会
+  `setTimeout(refreshPlugin, 120)`，而 `refreshPlugin()` 会
+  **拆掉并重建整个 DOM**，新建的 `<style>` 在创建时就带上了当前的
+  `cssText()`。于是换皮肤真正生效的路径一直是**"收起面板->重建"**，
+  而不是那个失效的赋值 —— 一个潜伏的 no-op 被 DOM 重建掩盖了。
+- 🔴 **为什么现在暴露**：v0.13.3 为修「两侧布局在折叠后丢失」，
+  移除了 `hide()` 里的无条件 `refreshPlugin()`（否则重建的面板会丢掉
+  `tfb-hz`）。掩体一撤，失效的赋值就露出来了 —— 换皮肤随之彻底不工作。
+- ✅ **修复｜新增 `refreshStyleSheet()` 作为样式表唯一写入点**：
+  用 `ui.root.getRootNode()` 上升到所属 shadowRoot 再找 `<style>`，
+  对任意层级都成立；子树内查找保留为兜底。`applyThemeNow()` 与
+  面板内主题菜单（原先各自内联同一段错误代码）**统一改为调用它**。
+- 🧪 **验证**：新增 6 项行为回归 —— 其中**对照组直接证明根因**：
+  在同样的 shadow 结构上，旧写法 `root.querySelector("style")` 返回
+  `null` 且样式未被更新；新写法成功更新且连续切换均生效。
+  前四轮 47 项（rc.2 主会话 7 + 闪烁 15 + 布局 15 + 动效 force 10）
+  **继续全绿**，五个修复同时成立 —— 累计 **53/53**。
+  `node --check` 通过；无 BOM；括号配平；三处副本 SHA256 一致。
+  回滚锚点：`~/.dsh/backups/todo-client.js.*.bak-skinfix-*`
 ## v0.13.4（2026-09-28）— 修复「动画特效停止、切换皮肤失效」（v0.13.2 守卫拦得过宽）
 
 - 🔴 **症状**：悬浮球的呼吸/旋转/发光等动效不再动了；在设置里切换皮肤也
