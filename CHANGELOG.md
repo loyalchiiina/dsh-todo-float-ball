@@ -3,6 +3,40 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## v0.13.7（2026-09-28）— 统一皮肤补上「呼吸」动效（此前只有经典皮肤有）
+
+- 🔴 **现象**：换成 128 套统一皮肤后，球体不再有呼吸感，看起来是静止的。
+- 🔴 **根因（一直如此，非回归）**：呼吸动效 `tfbBreathe` 只写在
+  `legacyCssText()` 里 —— 也就是**只服务于 3 套经典皮肤**
+  （nebula / nebB / nebC）。而统一皮肤走 `skinCssText()`，那条路径**从未
+  输出过** `tfbBreathe`，它只继承各皮肤 `rim` / `band` / `extra` 字段声明的
+  动效（实测主要是边框的 `dshSkinSpin` 旋转）。
+  实测确认：`animation:tfbBreathe` 全文 3 次出现，**全部位于
+  `legacyCssText` 内**；`SK.fx()` 也只为拼接 `rim`/`band`/`extra` 而存在，
+  自身不产生任何动画。因此从经典皮肤切到任意统一皮肤 = 呼吸动效消失。
+- ✅ **修复｜为统一皮肤注入呼吸动效**：在 `skinCssText()` 中补齐
+  `@keyframes tfbBreathe`（3.2s，与经典皮肤同节奏）与
+  `@keyframes tfbBreatheSoft`（4.2s，idle 态更柔和），由各皮肤既有的
+  CSS 变量驱动配色。同时保证：
+  - **完成态（tfb-done）关闭动画** —— 任务全部完成时不该继续"呼吸"。
+  - **尊重 `prefers-reduced-motion`** —— 系统要求减弱动效时自动关闭。
+  - **皮肤的个性化动效仍优先**：`s.extra` / `s.rim` 在呼吸规则之后注入，
+    按源码顺序覆盖。
+- ⚠️ **过程中发现并规避的一个真实冲突（重要）**：最初实现让呼吸动画驱动
+  `transform`，而球体的悬停/按下反馈正是
+  `.tfb-ball:hover{transform:scale(1.08)}` 与 `:active{transform:scale(.95)}`。
+  运行中的动画对**同属性**的优先级高于非 `!important` 声明，因此那版实现会
+  **静默吃掉鼠标悬停与按下的缩放反馈**。已改为呼吸只动
+  `filter`（brightness/saturate），**完全不碰 transform**，悬停/按下反馈
+  完整保留。（经典皮肤当年同样存在这个隐患，本版一并规避。）
+- 🧪 **验证（真行为测试）**：12/12 通过 —— **真实执行 `skinCssText()` 并检查
+  其产出的 CSS**（非字符串比对）：呼吸关键帧存在、球体正确引用、idle 态柔和版
+  存在、**呼吸不使用 transform**（逐帧确认只含 filter）、完成态关闭、
+  reduced-motion 生效、既有的 `dshSkinSpin` / `tfb-pulse` 未被破坏、
+  经典皮肤定义未受影响。
+  其余五轮 55 项继续全绿 —— **累计 67/67**。
+  `node --check` 通过；三处副本 SHA256 一致。
+  回滚锚点：`~/.dsh/backups/todo-client.js.*.bak-breathe-*`
 ## v0.13.6（2026-09-28）— 皮肤切换真正修好：改用直存引用，不再靠 DOM 遍历
 
 - 🔴 **背景**：v0.13.5 尝试用 `ui.root.getRootNode()` 定位样式表。方向对，但仍
