@@ -3,6 +3,41 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## v0.13.6（2026-09-28）— 皮肤切换真正修好：改用直存引用，不再靠 DOM 遍历
+
+- 🔴 **背景**：v0.13.5 尝试用 `ui.root.getRootNode()` 定位样式表。方向对，但仍
+  **依赖 DOM 遍历语义**（getRootNode 的返回值随层级/挂载方式而变），不是可靠
+  保证。用户实测反馈："三球皮肤不统一，别的插件都变，只有 todo 不变。"
+- 🔴 **为什么偏偏 todo 不变（架构差异，实测确认）**：
+  - `dsh-skill-browser` / `dsh-font-enhancer`：样式表放在 **`document.head`**，
+    用 `getElementById(SKIN_STYLE_ID)` **精确取回** —— 从不遍历查找，所以一直正常。
+  - `dsh-todo-float-ball`：使用 **Shadow DOM**（`host.attachShadow`），样式表挂在
+    **shadowRoot 直属**，与 `ui.root`（`.tfb-root`）是**兄弟节点**。
+    而更新皮肤的代码是 `ui.root.querySelector("style")` —— `querySelector`
+    **只搜子树**，因此**永远返回 null**，赋值分支从未执行。
+  - 结论：三球共用同一套皮肤目录、同一套 `dsh-ball-skin-change` 事件，但只有
+    todo 走了一条失效的定位路径，所以表现为"别的球变、todo 不变"。
+- ✅ **修复｜保存直接引用，彻底取消查找**：`buildUI()` 在创建样式表时就把它和
+  shadow root 存进 `ui`：
+  ```js
+  ui.styleEl = style;    // 样式表本体
+  ui.shadow  = shadow;   // 其所属 shadow root
+  ```
+  `refreshStyleSheet()` 按可靠性依次取用：
+  1. `ui.styleEl`（直存，零遍历 —— 主路径）
+  2. `ui.shadow.querySelector("style")`
+  3. `ui.root.getRootNode().querySelector("style")`
+  4. `ui.root.querySelector("style")`（旧写法，仅兜底）
+  同时把 `ui` 的两处重置点（初始声明 + `refreshPlugin()`）都补上 `styleEl`／
+  `shadow`，避免重建后引用丢失。
+- 🧪 **验证（真行为测试，执行真实代码而非比对字符串）**：8/8 通过 ——
+  标准 shadow 结构切皮肤生效、连续切换生效、`styleEl` 缺失时 `getRootNode`
+  回退可用、`ui` 为空不抛异常、样式表若在 root 内部时子树兜底仍可用；
+  并含**对照组**：在同样的 shadow 结构上，旧写法 `root.querySelector("style")`
+  返回 `null` 且样式未被改动，直接证明根因。
+  其余四轮 47 项（动效 force 10 + 闪烁 15 + 布局 15 + rc.2 主会话 7）继续全绿，
+  **累计 55/55**。`node --check` 通过；三处副本 SHA256 一致。
+  回滚锚点：`~/.dsh/backups/todo-client.js.*.bak-skin2-*`
 ## v0.13.5（2026-09-28）— 修复「更换皮肤不生效」（潜伏已久的选择器错误）
 
 - 🔴 **症状**：在设置里点皮肤不换样子；展开/收起面板后也不刷新皮肤。
