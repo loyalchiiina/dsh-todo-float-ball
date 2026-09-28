@@ -3,6 +3,40 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## v0.13.1（2026-09-28）— 修复 DSH 0.1.7-rc.2 内核升级后悬浮球不显示内容
+
+- 🔴 **根因（内核契约变更，非插件自身 bug）**：`0.1.7-rc.2` 把 `sessions.list`
+  快照里的 `current` 字段**彻底移除**，该快照现在只有
+  `{ ids, byId, phase, projectionsBySession }` 四个字段（见
+  `dsh-api-session-controller/lib/types/client/sessions/service.js`）。
+  "哪个会话是主会话"改由**逐行 retain 计数**判定：
+  `sessions.retainInfo(id).getSnapshot().retainedBy.mainView > 0`
+  （官方参考实现：`dsh-client-ui-session` 的 `publishMain()`）。
+- 🔴 **症状**：`syncFromSessions()` 读 `snap.current` 恒为 `undefined`
+  → `currentSid` 永远停在 `null` → 所有 todo 记录被写进字面量桶
+  `"current"`，而渲染时按**真实 sessionId** 取值 → 取不到 →
+  **悬浮球有数据但渲染为空**。官方 todo 面板走
+  `useProjection("todos")`，不经过这条链路，所以**原生进度条一直正常**
+  —— 这正是"内核自带的正常、悬浮球空白"的原因。
+- ✅ **修复 1｜主会话判定兼容双内核**：新增 `resolveMainSessionId()`，
+  优先沿用旧内核的 `snapshot.current`，在新内核上按官方规则
+  `retainedBy.mainView` 判定；再回退到"唯一携带 todos 的行"
+  （避免 rc.2 的 subagent 行干扰）。另加 `matchLegacyCurrent()`
+  作为 `retainInfo` 途径的防御性兜底。
+- ✅ **修复 2｜历史数据重定向**：`currentSid` 首次确定时，把误存于
+  `"current"` 桶的记录迁移到真实 sessionId，否则修复后的**首帧仍为空**。
+- ✅ **修复 3｜DOM 兜底通道常开**：原先 `if (!hasSessionsSvc)
+  installPanelObserver()` 意味着"只要 sessions 服务在就永不装兜底"，
+  于是主通道静默失效时**完全无感知**（本次事故即如此）。现改为**始终安装**
+  —— `readOfficialPanel()` 本身已有"绝不覆盖真实记录、仅在当前会话无数据时
+  建骨架"的保护，常开零成本，让此类内核漂移**自愈而非隐形**。看门狗轮询
+  也补了一条 `!currentSid` 时读官方面板的保险。
+- 🧪 **验证**：7/7 运行时回归通过（rc.2 判定 / 旧内核兼容 / 不抖动 /
+  无 retainedBy 回退 / 空快照 / byId 缺失均不抛异常）；`node --check`
+  语法通过；无 BOM；`__ModuleLoader__.load` 的 id 仍为
+  `dsh-todo-float-ball`（与 package.json、cordis.patch.yml 三处一致）；
+  括号配平；三处副本 SHA256 完全一致。
+  回滚锚点：`~/.dsh/backups/todo-float-ball-client.js.*.bak-rc2fix-*`
 ## v0.13.0（2026-09-17）— 硬约束：每轮首个工具调用必须是 todo_write
 
 - 🔴 **新增硬门（`lib/index.js` host half）**：`ctx.on("tools/pre-execute")` 拦截 —— **每个回复 turn 的第一个工具调用若不等于 `todo_write`，直接返回 `{kind:"deny", reason:"…"}`**，模型读到拒绝原因后会立即补写 todo 清单。
