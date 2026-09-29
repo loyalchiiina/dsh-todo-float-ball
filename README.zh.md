@@ -4,6 +4,27 @@
 
 [English](README.md) | 简体中文
 
+## 效果展示
+
+### 固定标签 · 双对话任务进度
+
+固定两个会话后，面板同时显示两栏任务进度，并行任务不用来回切换会话就能一起盯着。
+
+![固定标签：双对话任务进度](docs/images/preview-pinned-sessions.jpg)
+
+![固定标签：另一组双对话](docs/images/preview-pinned-sessions-2.jpg)
+
+### 胶囊模式
+
+右键球体可收起为细长胶囊，只显示当前进行中的任务和 `已完成/总数`——屏幕空间紧张时用。
+
+![胶囊模式](docs/images/preview-capsule.jpg)
+
+### 皮肤
+
+内置 120 种皮肤，与姊妹插件 skill-browser / font-enhancer 的球共用同一套皮肤目录，三球外观保持统一。
+
+![皮肤清单](docs/images/preview-skins.png)
 ## 这是什么？
 
 DSH 里的 AI 在推进多步骤任务时，会用内置的 `todo_write` 工具记录任务清单。官方界面把这份清单渲染成输入框上方的一条进度条——但它很容易被忽略、会随着对话滚动走远、而且 AI 还在干活时它默认是折叠的。
