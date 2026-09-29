@@ -4,6 +4,27 @@
 
 English | [简体中文](README.zh.md)
 
+## Screenshots
+
+### Pinned sessions — side-by-side task progress
+
+Pin two conversations and the panel shows both progress columns at once, so you can watch parallel work without switching sessions.
+
+![Pinned sessions: dual conversation task progress](docs/images/preview-pinned-sessions.jpg)
+
+![Pinned sessions: another pair of conversations](docs/images/preview-pinned-sessions-2.jpg)
+
+### Capsule mode
+
+Right-click the ball to collapse it into a slim capsule that shows the running task and the `done/total` count — ideal when screen space is tight.
+
+![Capsule mode](docs/images/preview-capsule.jpg)
+
+### Skins
+
+120 built-in skins, shared with the sibling skill-browser / font-enhancer balls so all three stay visually consistent.
+
+![Skin catalog](docs/images/preview-skins.png)
 ## What is this?
 
 When an AI agent in DSH works on a multi-step task, it records its plan with the built-in `todo_write` tool. The official UI shows this plan in a small strip above the input box — but the strip is easy to miss, disappears into the conversation flow, and collapses while the agent is still working.
