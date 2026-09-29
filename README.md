@@ -1,8 +1,42 @@
 # dsh-todo-float-ball
 
-**Keep your AI agent's task checklist always on screen — a floating progress ball for DeepSeek Harness (DSH).**
+**Your AI agent runs long tasks — but its plan keeps scrolling out of sight. Turn it into a progress ball that never leaves the screen.**
+**让 AI 的任务清单常驻屏幕 —— DeepSeek Harness（DSH）进度悬浮球插件。**
+
+[![npm](https://img.shields.io/badge/npm-dsh--todo--float--ball-cb3837?logo=npm)](https://www.npmjs.com/package/dsh-todo-float-ball)
+[![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![DSH](https://img.shields.io/badge/DSH-%E2%89%A5%202.0.14-4f46e5)](https://github.com/loyalchiiina/dsh-todo-float-ball)
 
 English | [简体中文](README.zh.md)
+
+---
+
+## What it does · 一句话说明
+
+When you give an AI agent a multi-step job in DSH, it records the plan with the built-in `todo_write` tool. The official UI renders that plan as a thin strip above the input box — **but the strip is easy to miss, scrolls away with the conversation, and folds itself while the agent is still working.** You end up hunting through the transcript to answer "how far along is it?"
+
+**dsh-todo-float-ball** moves that checklist onto a persistent floating ball:
+
+| The problem | What this plugin does |
+|---|---|
+| The plan strip scrolls away; progress is invisible | A ball **pinned to a window corner** (bottom-right by default; draggable, position remembered across restarts) |
+| You must expand a panel to see "how many are done" | The ball face shows **`done/total`** directly, with a progress ring |
+| You can't tell which item the agent is on right now | **The active task's name** appears on the ball; capsule mode shows only that line |
+| Several sessions running — you keep switching to check each | **Pin multiple sessions and the panel shows their progress side by side**, so parallel work is visible at a glance |
+| Hard to tell finished from unfinished | **Status colour at a glance**: pulsing orange = working, green = all done, blue = pending only, gray = no list |
+| Want to look back at previously planned tasks | **History archive**: when a new plan replaces the old one, the old tasks fold into a "history" section instead of vanishing |
+| The ball blocks your view | Hide it, collapse it to a capsule, or drag it — with per-session memory |
+
+**It is a pure, read-only companion**: the plugin never modifies the official panel, the conversation, or any other plugin.
+
+## Why it matters · 为什么值得装
+
+- **Built for long unattended runs** — DSH agents continue across many turns; you may not look at the screen for ten minutes. The orange glow and `3/8` tell you at a glance that work is still moving, and how far.
+- **Parallel sessions stop being guesswork** — pinning side-by-side columns puts two conversations' progress in one panel; no more clicking back and forth.
+- **Visually consistent with its siblings** — shares one **120-skin** catalog with the `dsh-skill-browser` and `dsh-font-enhancer` balls, so all three switch together and match.
+- **One codebase, two targets** — identical behaviour on Desktop (Electron) and the web UI.
+- **Zero intrusion, zero config** — install and it works; no config files, no changes to the official UI. `Shadow DOM + all:initial` keeps styles isolated, so it cannot clash with your theme or skin plugins.
+- **Reliable data** — dual-channel sync: a DOM observer on the official todo panel **plus** passive session-projection parsing. **Even when the official strip is collapsed, the ball still has the full list.**
 
 ## Screenshots
 
@@ -25,16 +59,15 @@ Right-click the ball to collapse it into a slim capsule that shows the running t
 120 built-in skins, shared with the sibling skill-browser / font-enhancer balls so all three stay visually consistent.
 
 ![Skin catalog](docs/images/preview-skins.png)
-## What is this?
 
-When an AI agent in DSH works on a multi-step task, it records its plan with the built-in `todo_write` tool. The official UI shows this plan in a small strip above the input box — but the strip is easy to miss, disappears into the conversation flow, and collapses while the agent is still working.
+## Basic usage · 基本用法
 
-**dsh-todo-float-ball** mirrors that checklist onto a small, persistent, draggable floating ball:
-
-- The ball sits in a corner of the window at all times (default: bottom-right).
-- Its face shows live progress: `done/total`, with the active task's name underneath.
-- Click it to expand a full task panel; click again (or press `Esc`) to fold it back.
-- Color tells you the state at a glance: pulsing orange = work in progress, green = all done, blue = pending only, gray = no list yet.
+- **The ball** sits in a window corner at all times (default: bottom-right).
+- **Its face** shows live progress: `done/total`, with the active task's name underneath. A ring around it mirrors the same percentage.
+- **Click** the ball to expand the full task panel; **click again** (or press `Esc`) to fold it back.
+- **Right-click** to switch to capsule mode, which shows only the running task and the count.
+- **Drag** it anywhere; the position is remembered per profile. Drag it off-screen and it snaps back.
+- **Colour** tells you the state at a glance: pulsing orange = work in progress, green = all done, blue = pending only, gray = no list yet.
 
 It is a pure, read-only companion: the plugin never modifies the official panel, the conversation, or any other plugin.
 
