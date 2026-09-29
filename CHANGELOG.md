@@ -3,6 +3,27 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## v0.14.0（2026-09-29）— 效果宣传图 + README 展示 + npm 包纳入图片
+
+- ✨ **新增 4 张效果宣传图**（`docs/images/`），并在中英双语 README 顶部
+  新增「效果展示 / Screenshots」章节逐一说明：
+  - `preview-pinned-sessions.jpg` / `preview-pinned-sessions-2.jpg`
+    —— **固定标签 · 双对话任务进度**：固定两个会话后，面板并排显示两栏
+    任务进度，并行任务无需切换会话即可同时盯住。
+  - `preview-capsule.jpg` —— **胶囊模式**：右键收起为细长胶囊，只显示当前
+    进行中任务与 `已完成/总数`。
+  - `preview-skins.png` —— **皮肤清单（120 种）**：与姊妹插件
+    skill-browser / font-enhancer 共用同一套皮肤目录，三球外观统一。
+- 🔧 **修正 `package.json` 的 `files` 白名单**：原先只声明 `docs/*.md`，
+  **不含 `docs/images/*`**，导致 npm 包里不会带上任何截图（GitHub 能看到、
+  npm 用户看不到）。现已加入 `docs/images/*`，确保两个渠道内容一致。
+- 🧹 **清理 2 个从未被引用的孤儿截图**（`todo-float-ball-collapsed.png`、
+  `todo-float-ball-expanded.png`，合计约 308 KB）—— 它们既未被任何 README
+  引用，也不在白名单内，属于仓库冗余。
+- 🖼 **图片体积优化**：原图合计 498.6 KB → **287.6 KB（降 42%）**。
+  思路是按内容选格式：照片型截图用高质量 JPEG（`-q:v 3`，实测平均每通道
+  偏差 1.4~2.0/255，视觉无损）；皮肤清单因是大量小色块罗列（JPEG 最不擅长
+  的场景，偏差达 2.98/255），**保留为无损 PNG**。
 ## v0.13.7（2026-09-28）— 统一皮肤补上「呼吸」动效（此前只有经典皮肤有）
 
 - 🔴 **现象**：换成 128 套统一皮肤后，球体不再有呼吸感，看起来是静止的。
