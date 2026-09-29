@@ -3,7 +3,7 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## v0.14.1（2026-09-29）— README 功能简介重写（安装前就能看懂它是干什么的）
+## v0.14.2（2026-09-29）— README 功能简介重写（安装前就能看懂它是干什么的）
 
 - ✍️ **两份 README 顶部新增三段「说清楚」的内容**（中英对称）：
   - **一句话说明** —— 用一张「你遇到的痛点 → 这个插件怎么解决」对照表，
