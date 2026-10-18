@@ -1,5 +1,38 @@
 # Changelog
 
+## 0.14.5 — 2026-10-18
+
+### 修复：首工具判定 gate 的三处缺陷（合并社区 PR #1，作者 @WanchengWildMan）
+
+本次为**宿主侧纯 bug 修复**，客户端 `lib/client.js` 与上一版逐字节一致（悬浮球与数据同步逻辑未变）。
+
+- **缺陷① 计数卡死导致整个 turn 死锁（最严重）**
+  旧判据 `toolCallsThisTurn === 1` 命中即 `deny`，而被基准拒绝的调用**不会**回写事件流，计数永久停在 1 → 本 turn 之后**每一个**工具调用都被拒。社区实测被拒 74 次，只能新开一轮才能恢复。
+  修复：改用 `dispatchedThisTurn > 1`（只统计**已实际发出**的调用），并在检测到 `todo_write` 后立即置 `hasTodoWriteThisTurn`，补写 todo 后立刻放行。
+
+- **缺陷② `run_code` 包装调用无法识别**
+  旧代码只认 `exec.name === "todo_write"`。当 `todo_write` 被 `run_code` 包裹执行时，`exec.name` 是 `run_code`，判定必然失败。
+  修复：新增 `callArgs.indexOf("todo_write") !== -1` 兜底，脚本内调用 `todo_write` 也能识别。
+
+- **缺陷③ 并行批次时序不保证**
+  旧判据依赖"本 turn 已有几个 `tool/call`"的顺序，并行批次的事件到达顺序不受保证。
+  修复：判定改为"已发出 > 1 且见过工具名 且 未见 todo_write"，不再依赖到达顺序。
+
+- **新增 fail-open 保护**：本 turn 有调用但一个 `name` 都读不到（宿主事件结构变更）时**放行**，宁可漏拦也不阻塞会话。
+
+### 实测验证（2026-10-18）
+
+`~/.dsh/logs/desktop-next.log` 中本次运行仅出现 **1 次** deny，补写 `todo_write` 后全部后续调用正常执行；旧版为"永久卡死"。
+
+### Fix: three defects in the first-tool gate (merges community PR #1 by @WanchengWildMan)
+
+Host-half bug fix only — `lib/client.js` is byte-identical to the previous version.
+
+- **Defect 1 — counter deadlock (most severe)**: `toolCallsThisTurn === 1` denied a call that never got appended back, freezing the counter at 1 and rejecting every following call in the turn (74 rejections in the reported case). Now `dispatchedThisTurn > 1` counts only calls already dispatched, and `hasTodoWriteThisTurn` unblocks as soon as a `todo_write` appears.
+- **Defect 2 — `run_code` wrapper not recognised**: only `exec.name === "todo_write"` was matched, so a wrapped call never qualified. Now `callArgs.indexOf("todo_write") !== -1` is checked as a fallback.
+- **Defect 3 — parallel batch ordering**: the old rule depended on arrival order of `tool/call` events, which parallel batches do not guarantee. The new rule is order-independent.
+- **Fail-open guard added**: when a turn has calls but no readable `name` (host event shape changed), the gate allows the call instead of blocking the session.
+
 ## 0.14.4 — 2026-10-14
 
 ### 合规性改进（无功能改动）
