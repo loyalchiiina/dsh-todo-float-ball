@@ -33,10 +33,10 @@ When you give an AI agent a multi-step job in DSH, it records the plan with the 
 
 - **Built for long unattended runs** — DSH agents continue across many turns; you may not look at the screen for ten minutes. The orange glow and `3/8` tell you at a glance that work is still moving, and how far.
 - **Parallel sessions stop being guesswork** — pinning side-by-side columns puts two conversations' progress in one panel; no more clicking back and forth.
-- **Visually consistent with its siblings** — shares one **120-skin** catalog with the `dsh-skill-browser` and `dsh-font-enhancer` balls, so all three switch together and match.
+- **Visually consistent with its siblings** — shares one **128-skin** catalogue with the `dsh-skill-browser` and `dsh-font-enhancer` balls (plus the 6 classic skins kept as a separate "legacy" group), so all three switch together and match.
 - **One codebase, two targets** — identical behaviour on Desktop (Electron) and the web UI.
 - **Zero intrusion, zero config** — install and it works; no config files, no changes to the official UI. `Shadow DOM + all:initial` keeps styles isolated, so it cannot clash with your theme or skin plugins.
-- **Reliable data** — dual-channel sync: a DOM observer on the official todo panel **plus** passive session-projection parsing. **Even when the official strip is collapsed, the ball still has the full list.**
+- **Reliable data** — three-tier sync: the runtime's `sessions` service (authoritative projection) drives the ball; a debounced `MutationObserver` on the official todo panel and a passive transport tap are fallbacks that only speak when the service has produced nothing for that session. **Even when the official strip is collapsed — or unrendered — the ball still has the full list.**
 
 ## Screenshots
 
@@ -56,7 +56,7 @@ Right-click the ball to collapse it into a slim capsule that shows the running t
 
 ### Skins
 
-120 built-in skins, shared with the sibling skill-browser / font-enhancer balls so all three stay visually consistent.
+128 built-in skins (plus a separate "legacy" group holding the 6 pre-catalog skins), shared with the sibling skill-browser / font-enhancer balls so all three stay visually consistent. Groups: 招牌特效 28 / 浓郁深底 38 / 尘埃灰调 20 / 柔光深底 15 / 中性点缀 10 / 浅色纸面 17.
 
 ![Skin catalog](docs/images/preview-skins.png)
 
@@ -87,7 +87,7 @@ It is a pure, read-only companion: the plugin never modifies the official panel,
 | 中文 | English |
 |---|---|
 | 点球折叠/展开面板，靠屏幕边缘自动翻侧 | Click to fold/expand; the panel flips sides near the screen edge |
-| 双路数据同步：A 路 MutationObserver 抓官方 todo 面板，B 路被动解析会话投影帧——官方面板折叠时也有完整清单 | Dual-channel sync: A) DOM observer on the official panel, B) passive session-projection parsing — full list even when the strip is collapsed |
+| 三路数据同步：**主** = 运行时 `sessions` 服务的权威投影帧；**兜底 1** = MutationObserver 抓官方 todo 面板；**兜底 2** = 被动拦截传输帧。兜底仅在权威通道对该会话尚无数据时才发言，官方面板折叠时也有完整清单 | Three-tier sync: **primary** = the runtime `sessions` service (authoritative projection); **fallback 1** = DOM observer on the official panel; **fallback 2** = passive transport tap. Fallbacks only speak while the authoritative channel has produced nothing for that session — full list even when the strip is collapsed |
 | Shadow DOM + `all:initial` 样式隔离，不进不出，主题/皮肤插件互不干扰 | Shadow DOM with `all:initial` — no style leaks in or out, immune to theme/skin plugins |
 | 桌面端（Electron）与网页端同一份代码双端可用 | One codebase for Desktop (Electron) and the web UI |
 
@@ -96,6 +96,8 @@ It is a pure, read-only companion: the plugin never modifies the official panel,
 | 中文 | English |
 |---|---|
 | 快照合并不再冲掉旧任务——旧任务进入历史归档区 | Snapshots merge instead of replacing — older todos become a history archive |
+| **球上的数字只反映当前这一轮**（与官方进度条同口径），历史不会把分母撑大 | **The number on the ball covers the current round only** (same basis as the official strip); history never inflates the denominator |
+| **展开清单分两段**：上面是可折叠的历史（已完成历史 / 被抛弃的历史任务），中间一道分界线 `── 当前进度 · 5/10 完成 ──`，下面才是当前轮的任务 | **The expanded list has two sections**: collapsible history on top, a divider `── Current · 5/10 done ──` in the middle, the current round's todos below |
 | 行级 ✕ 隐藏、两个独立折叠行、🧹 批量清理、♻️ 一键恢复、📋 整行复制 | Per-row ✕ hide, two independent fold rows, 🧹 batch cleanup, ♻️ one-click restore, 📋 full-text copy |
 | 📌 固定会话与当前对话共用同一历史渲染器，状态按会话独立 | 📌 Pinned sessions render through the same history renderer, with per-session state |
 | ⇄ 布局切换：上下堆叠 ⇄ 左右并排（左当前列表、右固定会话，带列标题） | ⇄ layout switch: stacked ⇄ side-by-side (current + pinned columns with captions) |
@@ -104,7 +106,7 @@ It is a pure, read-only companion: the plugin never modifies the official panel,
 
 | 中文 | English |
 |---|---|
-| 宿主端向每次会话系统提示注入 todo 纪律段（order=190，约 340 字）——装上插件即生效，无需加载技能 | Host injects a stable todo-discipline section (order=190, ~340 chars) into every session — works the moment the plugin is installed |
+| 宿主端向每次会话系统提示注入 todo 纪律段（order=190，6 条规则，实测 498 字符）——装上插件即生效，无需加载技能 | Host injects a stable todo-discipline section (order=190, 6 rules, 498 chars measured) into every session — works the moment the plugin is installed |
 | 硬门：每轮首个工具调用若不是 todo_write 会被拒绝并提示补写（可用 `enforceFirstTodoWrite: false` 关闭） | Hard gate: the first tool call of each turn must be `todo_write` or it is denied (disable with `enforceFirstTodoWrite: false`) |
 | 只有显式布尔 `false` 才关闭；`"false"`/`0`/缺 config 均保持开启 | Only an explicit boolean `false` disables it; `"false"`/`0`/missing config keep it ON |
 
@@ -123,11 +125,11 @@ It is a pure, read-only companion: the plugin never modifies the official panel,
 | Live progress | `done/total` on the ball face plus the first active task's content (truncated), updated in real time |
 | Fold / expand | Click the ball to toggle the task panel; the panel opens next to the ball and flips sides when near the screen edge |
 | Status colors | Per-item icons and colors: ✓ completed (green, strikethrough), ▶ in progress (orange), ○ pending (dashed gray); ball itself: orange pulse / green / blue / idle gray |
-| Dual-channel data sync | Channel A: `MutationObserver` over the official todo panel DOM. Channel B: passively inspects session projection frames (`{type:"projection", key:"todos", ...}`) via wrapped `fetch` and `WebSocket.onmessage`, so the full list is available even when the official strip is collapsed |
+| Data sync (3 tiers) | **Primary**: `ctx.sessions.list.subscribe` — the runtime's authoritative `todos` projection, plus a 2 s pull as a safety net. **Fallback 1**: a debounced `MutationObserver` over `[data-testid="todo-panel"]`. **Fallback 2**: a passive tap on `window.fetch` and `WebSocket.onmessage` that only reacts to projection-shaped frames. Fallbacks are gated by `hasPrimaryData()` and stay silent once the service has spoken for a session |
 | Shadow DOM isolation | All UI lives inside an open Shadow DOM with `all:initial` — no style leaks in or out, immune to theme/skin plugins |
 | Dual-end support | Works in DSH Desktop (Electron window) and the web UI (browser) with the same code, because both render the same page; the UI mounts on `<html>` to dodge `transform`-related `position:fixed` breakage |
 | Privacy-friendly | Zero telemetry, zero data upload. The only host-side surface is a loopback-only health route (`/dsh-todo-float-ball/health`) |
-| **Discipline injection (v0.9.0)** | The host injects 5 hardest todo rules (~340 chars, `order=190`) into the system prompt of **every session** — **works as soon as the plugin is installed, no skill needs to be loaded**; turn it off with `injectDiscipline: false` |
+| **Discipline injection (v0.9.0)** | The host injects a 6-rule todo discipline (498 chars measured, `order=190`) into the system prompt of **every session** — **works as soon as the plugin is installed, no skill needs to be loaded**; turn it off with `injectDiscipline: false` |
 | **History archive & panel tools (v0.10.0)** | Merged snapshots no longer wipe older todos — they become a foldable history archive; per-row ✕ hide, two independent fold rows, 🧹 batch cleanup, ♻️ one-click restore, 📋 full-text copy; all counters reflect only the latest snapshot |
 | **Pinned-panel parity & layout switch (v0.11.0)** | 📌 pinned sessions render through the *same* history renderer as the current view (folds, 🧹, ♻️, per-session state and per-session action scoping); the panel header gained a ⇄ button to flip between a stacked layout and a side-by-side layout (left = current list, right = pinned sessions) with per-column captions |
 
@@ -207,9 +209,11 @@ Copy this package folder into your profile's `node_modules` (a real copy — do 
 After the restart you should see the ball in the bottom-right corner. Verify the host half with:
 
 ```
-http://127.0.0.1:43120/dsh-todo-float-ball/health
+http://127.0.0.1:<your DSH port>/dsh-todo-float-ball/health
 → {"ok":true,"plugin":"dsh-todo-float-ball","version":"<the installed package.json version>"}
 ```
+
+**Use your actual port.** DSH Desktop defaults to `port: 0` (a fresh random port on every restart), so there is no fixed number to hardcode. Read it from the address bar of the DSH window, or pin it by setting `port` in `%USERPROFILE%\.dsh\desktop-preferences.json`. A fixed `43120` only applies if you set it yourself. The route is also loopback-only and refuses any non-renderer request with `403 Browser access is disabled`, so `curl` will not work unless you enable `browserAccess`.
 
 ## How it works
 
@@ -219,12 +223,13 @@ The official todo data is a **session projection**:
 2. `@deepseek-ai/dsh-client-connection` broadcasts the current value as a control frame: `{type:"projection", sessionId, key:"todos", value:[{content,status}...]}`.
 3. `@deepseek-ai/dsh-client-ui-conversation` renders it as the plan strip above the input box (`[data-testid="todo-panel"]`).
 
-This plugin attaches to both ends without touching either:
+This plugin reads from all three surfaces without touching any of them, in strict priority order:
 
-- **Channel A (DOM)**: a debounced `MutationObserver` watches for `[data-testid="todo-panel"]`, reads `li[data-status]` items when the strip is expanded, and parses the localized count label (e.g. "1 完成 · 2 进行中") when it is collapsed.
-- **Channel B (transport)**: a one-time, defensive wrapper around `window.fetch` (cloning responses, text/json only) and `WebSocket.prototype.onmessage` (text frames) feeds every payload through a strict extractor that only reacts to objects shaped like projection frames, `todo/write` events, or `{todos:[...]}` snapshots. Malformed payloads are ignored; nothing is ever written back.
+- **Primary — `sessions` service**: the client half declares `inject: ["sessions"]` and subscribes to the runtime's global session registry (`ctx.sessions.list.subscribe`, with a 2 s pull as a safety net in case a callback stops firing after a shell rebuild). This channel is authoritative: it is the whole list, it carries history, and it wins every disagreement.
+- **Fallback 1 — DOM panel**: a debounced (200 ms) `MutationObserver` watches `[data-testid="todo-panel"]`, reads `li[data-status]` items when the strip is expanded, and parses the localized count label (e.g. "1 完成 · 2 进行中") when it is collapsed. It returns immediately whenever `hasPrimaryData()` says the service has already spoken for that session — otherwise the two channels would alternate on every observer tick and the ball would flicker.
+- **Fallback 2 — transport tap**: a one-time, defensive wrapper around `window.fetch` (cloning responses, text/json only) and `WebSocket.prototype.onmessage` (text frames) feeds every payload through a strict extractor that only reacts to objects shaped like projection frames, `todo/write` events, or `{todos:[...]}` snapshots. Malformed payloads are ignored; nothing is ever written back.
 
-All channels funnel into one normalizer: items are filtered to the three known statuses, blank contents are dropped, and unchanged lists are no-ops (cheap signature comparison).
+All channels funnel into one normalizer: items are filtered to the three known statuses, blank contents are dropped, and unchanged lists are no-ops (cheap signature comparison). The **snapshot boundary** is taken from the authoritative frame length — `todo_write` replaces the whole list, so that frame *is* the live plan and everything merged in behind it is archive. That single rule is what keeps `done/total` matching the official panel; the pre-0.14.6 code used a monotonic high-water mark that could never shrink and drifted further off with every round.
 
 ## FAQ
 
@@ -238,7 +243,7 @@ Yes — drag it anywhere. The position persists per browser/renderer profile. If
 Yes. That is exactly why channel B exists: the official strip renders only a counts label when collapsed, while projection frames always carry the full list.
 
 **Does it slow the UI down?**
-No. The observer is debounced (200 ms), the transport tap only string-scans for `"todos"` before parsing, and the periodic re-render watchdog stops after ~10 minutes.
+No. The observer is debounced (200 ms), the transport tap only string-scans for `"todos"` before parsing, and the ball-respawn watchdog gives up after 300 × 2 s = 10 minutes (the visibility/sync poll is deliberately kept alive, because it is also how a skin switched from a sibling plugin reaches this ball).
 
 ## Compatibility
 

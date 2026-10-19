@@ -33,10 +33,10 @@ DSH 里让 AI 干活时，它会用内置的 `todo_write` 记一份任务清单�
 
 - **专治"长任务失联"** —— DSH 的 AI 会自动续跑很多轮，你可能十几分钟不看屏幕。球上的橙灯和 `3/8` 让你一眼就知道**还在跑、跑到哪了**。
 - **多会话并行不再瞎猜** —— 固定标签把两栏进度并排摆在同一个面板里，不用左点右点来回切。
-- **三球视觉统一** —— 与姊妹插件 `dsh-skill-browser`、`dsh-font-enhancer` 共用同一套 **120 款皮肤**目录，三个球一起换肤、风格一致。
+- **三球视觉统一** —— 与姊妹插件 `dsh-skill-browser`、`dsh-font-enhancer` 共用同一套 **128 款皮肤**目录（另有「经典（旧版）」分组保留最初 6 款），三个球一起换肤、风格一致。
 - **双端同一份代码** —— 桌面端（Electron）和网页端行为一致。
 - **零侵入零配置** —— 装上即用，不写配置文件也不改官方 UI；`Shadow DOM + all:initial` 做样式隔离，与你其他主题/皮肤插件互不干扰。
-- **数据来源可靠** —— 双通道同步：官方 todo 面板的 DOM 观察 **加上** 会话投影帧被动解析。**官方那一条折叠了，球上依然是完整清单**。
+- **数据来源可靠** —— 三路同步：**主** = 运行时 `sessions` 服务的权威投影帧；**兜底 1** = 官方 todo 面板的 DOM 观察；**兜底 2** = 传输帧被动拦截。兜底只在权威通道对该会话尚无数据时才发言。**官方那一条折叠了、甚至没渲染，球上依然是完整清单**。
 
 ## 效果展示
 
@@ -56,7 +56,7 @@ DSH 里让 AI 干活时，它会用内置的 `todo_write` 记一份任务清单�
 
 ### 皮肤
 
-内置 120 种皮肤，与姊妹插件 skill-browser / font-enhancer 的球共用同一套皮肤目录，三球外观保持统一。
+内置 128 款皮肤（另有「经典（旧版）」分组保留最初 6 款：🌌 星云·流光 / 🌟 星云·宝石 / 🌙 星云·顶弧 / 💎 石墨版 / 🔵 蓝宝石版 / 🧊 玻璃版），与姊妹插件 skill-browser / font-enhancer 的球共用同一套皮肤目录，三球外观保持统一。分组：招牌特效 28 / 浓郁深底 38 / 尘埃灰调 20 / 柔光深底 15 / 中性点缀 10 / 浅色纸面 17。
 
 ![皮肤清单](docs/images/preview-skins.png)
 
@@ -87,7 +87,7 @@ DSH 里让 AI 干活时，它会用内置的 `todo_write` 记一份任务清单�
 | 中文 | English |
 |---|---|
 | 点球折叠/展开，靠屏幕边缘自动翻侧 | Click to fold/expand; flips sides near the edge |
-| 双路数据同步：DOM 观察 + 会话投影帧解析——官方面板折叠时也有完整清单 | Dual-channel sync: DOM observer + projection frames — full list even when collapsed |
+| 三路数据同步：**主** = `sessions` 服务权威投影帧；**兜底** = DOM 观察 + 传输帧拦截（权威通道有数据时兜底自动静默）——官方面板折叠时也有完整清单 | Three-tier sync: primary = `sessions` service projection; fallbacks = DOM observer + transport tap (gated by `hasPrimaryData()`) — full list even when collapsed |
 | Shadow DOM + `all:initial` 样式隔离 | Shadow DOM with `all:initial` isolation |
 | 桌面端 + 网页端双端可用 | Works on Desktop and web |
 
@@ -123,11 +123,11 @@ DSH 里让 AI 干活时，它会用内置的 `todo_write` 记一份任务清单�
 | 实时进度 | 球面显示 `完成数/总数` + 当前第一个进行中任务的内容（超长截断），随 `todo_write` 实时刷新 |
 | 折叠/展开 | 点球切换任务面板；面板在球旁边弹出，靠边时自动翻到另一侧 |
 | 状态颜色 | 每项带状态图标与配色：✓ 已完成（绿色+删除线）、▶ 进行中（橙色）、○ 待办（灰色虚线圈）；球本身：橙色脉动/绿/蓝/灰 |
-| 数据双路同步 | 主路：`MutationObserver` 监听官方 todo 面板 DOM；辅路：包装 `fetch` 与 `WebSocket.onmessage`，被动捕获会话投影帧 `{type:"projection", key:"todos", ...}`——**官方面板折叠时也能拿到完整清单** |
+| 数据三路同步 | **主路**：`ctx.sessions.list.subscribe` 订阅运行时权威投影帧（另有 2 秒轮询兜底，防 shell 重建后回调失联）；**兜底一**：`MutationObserver` 监听官方 todo 面板 DOM；**兜底二**：包装 `fetch` 与 `WebSocket.onmessage`，被动捕获会话投影帧 `{type:"projection", key:"todos", ...}`。兜底由 `hasPrimaryData()` 把关，权威通道有数据即静默——**官方面板折叠时也能拿到完整清单** |
 | Shadow DOM 样式隔离 | 全部 UI 在 open Shadow DOM 内并加 `all:initial`——样式不进不出，主题/皮肤插件互不干扰 |
 | 双端可用 | DSH Desktop 桌面端（Electron 窗口）与网页端（浏览器）同一份代码通用；UI 挂载在 `<html>` 根节点，规避 `transform` 导致的 `position:fixed` 失效 |
 | 隐私友好 | 零遥测、零数据上传。宿主端只注册一个仅限本机回环访问的健康检查路由（`/dsh-todo-float-ball/health`） |
-| **纪律注入（v0.9.0）** | 宿主端向**每次会话的系统提示**注入 5 条最硬的 todo 纪律（约 340 字，`order=190`）——**装上插件即生效，无需加载任何技能**；可用 `injectDiscipline: false` 关闭 |
+| **纪律注入（v0.9.0）** | 宿主端向**每次会话的系统提示**注入 6 条 todo 纪律（实测 498 字符，`order=190`）——**装上插件即生效，无需加载任何技能**；可用 `injectDiscipline: false` 关闭 |
 | **历史归档与面板管理（v0.10.0）** | 快照合并不再冲掉旧任务——旧任务进入可折叠的历史归档；行级 ✕ 隐藏、两个独立折叠行、🧹 批量清理、♻️ 一键恢复、📋 整行复制；球面计数只反映最新快照 |
 | **固定会话同款体验 + 面板布局切换（v0.11.0）** | 📌 固定会话与当前对话走**同一个历史渲染器**（两个折叠行、🧹、♻️、按会话独立的开合与操作归属）；面板头部新增 ⇄ 按钮，可在【上下堆叠】与【左右并排】之间切换，并带列标题 |
 
@@ -152,6 +152,7 @@ DSH 里让 AI 干活时，它会用内置的 `todo_write` 记一份任务清单�
 - **统计口径 = 当前计划**——球面 `完成数/总数`、进度环、头部汇总、「还有 N 项未完成」提示全部只统计最新快照（`snapshotList()`）；历史是纯档案，不进任何计数。
 - **行级隐藏（✕）**——悬停历史行点 ✕ 即隐藏。隐藏记录按会话存在 `localStorage`（`dsh-todo-float-ball-hidden-v1`），数据层零改动。固定会话（📌）的行独立隐藏——会话 A 的隐藏记录绝不会隐藏会话 B 的行（`data-ownsid` 归属过滤）。
 - **两个折叠行**——`▾ 已完成历史（N 条）` 与 `▸ 被抛弃的历史任务（M 条）` 是独立折叠行（默认收起）；最新快照始终完整平铺。
+- **分界线（v0.14.6）**——历史折叠区与当前轮清单之间有一道 `── 当前进度 · 5/10 完成 ──` 分界线：两侧渐隐细线 + 中间圆角胶囊标签，两套皮肤各自配色，`pointer-events:none` 不挡点击。它把「历史贡献」与「官方最新清单」在视觉上一刀切开，避免误把历史当成正在做的事。
 - **批量清理（🧹）**——每个折叠行带 🧹 清本区按钮，另有 `🧹 一键清理全部历史（X 条）` 一行同时清两区。
 - **一键恢复（♻️）**——`♻️ 一键恢复全部隐藏的历史（X 条）` 仅在有隐藏条目时出现，一次恢复本会话全部隐藏行。
 - **整行复制（📋）**——复制**完整**任务文本（非 80 字显示截断），带真实 ✓/⚠ 反馈。
@@ -184,9 +185,11 @@ npm install dsh-todo-float-ball
 重启后右下角应出现悬浮球。可用下面的地址验证宿主端已挂载：
 
 ```
-http://127.0.0.1:43120/dsh-todo-float-ball/health
+http://127.0.0.1:<你当前的 DSH 端口>/dsh-todo-float-ball/health
 → {"ok":true,"plugin":"dsh-todo-float-ball","version":"<已安装 package.json 里的版本号>"}
 ```
+
+**端口要填你自己的。** DSH 桌面端默认 `port: 0`（每次重启换一个随机端口），没有固定值可抄。可从 DSH 窗口地址栏读取，或在 `%USERPROFILE%\.dsh\desktop-preferences.json` 里把 `port` 固定下来。固定的 `43120` 只有你自己设置过才成立。该路由还只接受本机渲染进程的请求，其他请求一律回 `403 Browser access is disabled`，所以除非你打开 `browserAccess`，`curl` 是拿不到的。
 
 ## 实现原理
 

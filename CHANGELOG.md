@@ -1,5 +1,123 @@
 # Changelog
 
+## 0.14.6 — 2026-10-19
+
+### 🔴 修复：悬浮球进度与官方 todo 面板不一致（球显示 9/18，官方只有 6 条 / 0 完成）
+
+**症状**：官方面板显示 6 条任务（1 进行中 · 5 待处理，0 完成），悬浮球却显示 `9/18`；
+完成数与总数双双偏大，且越用越离谱，重启也不恢复。
+
+**根因**（`lib/client.js` 快照边界 `snapLen`）：
+2026-09-28 为避免球在 `0/1 -> 7/9 -> 0/1` 之间闪烁，把 `snapLen` 改成了
+单调递增的高水位 `Math.min(Math.max(prevSnap, norm.length), merged.length)`。
+它只增不减：一旦被某一轮长计划顶到 18，后续每一轮都把旧计划的行走当成
+live 任务统计 —— `todos.slice(0, snapLen)` 里混进了上一轮 font-enhancer 的 12 条历史任务。
+
+**修复**：权威通道的一帧就是当前计划的全部（`todo_write` 是整表替换），
+因此 `snapLen = norm.length`，其后的合并项即为历史。DOM fallback 仍然不抬高边界，
+且服务端已给出边界时不再用它。
+
+当年那个闪烁的**真实来源**已被别处掐断：`readOfficialPanel()` 现在一开头就用
+`hasPrimaryData()` 检查，权威通道已发声的会话直接 return，不会再往这里写一行的「plan」。
+
+**验证**（真机探针，日志 `[tfb3]`）：
+```
+FRAME norm=6 prevSnap=18 merged=100 snapLen=6 fallback=false
+FINAL snapLen=6 merged=100 ball={"cls":"tfb-active","label":"0/6"}
+official="1 进行中 · 5 待处理" -> done=0 total=6
+MATCH=true
+```
+修复前同一探针输出为 `label:"9/18"`、`MATCH=false`。
+
+> 顺带记录一次走错的路：第一版修复用「本帧内容是否为旧窗口的子集」判定计划是否更替。
+> 该判据在**追加式合并**的数据结构上恒为真（旧窗口本已含有本帧的行），
+> 实测完全无法收缩边界。已回退。
+
+### 🔴 修复：热重载后新实例画不出 UI，屏幕上是已死实例留下的旧数字
+
+**症状**：`snapLen` 修好、数据层实测 `ballState()` 已返回 `7/12`（与官方 12 条完全一致），
+但屏幕上那个胶囊仍然显示 `11/18`，反复硬重载也不变。
+
+**根因**（`lib/client.js` 的 `buildUI()`）：
+```js
+if (document.getElementById(BALL_ID)) return;   // ← 旧守卫
+```
+热重载（`Ctrl+Shift+R`）不会卸载上一次实例创建的那个 `#dsh-tfb-root` shadow host。
+新实例进 `buildUI()` 时发现 id 已存在就直接 `return`，于是：
+
+- `ui.ball` 恒为 `null`；
+- `renderBall()` 第一行 `if (!ui.ball) return;` 使每次渲染都是空操作；
+- 屏幕上留下的是**上一个已死实例**算出来的数字，而那个实例的数据早已不再更新。
+
+实测取证（日志 `[tfb13]` / `[tfb12]`）：
+
+```
+[tfb13] APPLY#1 at ...
+[tfb13] inst1 t5  ballState=7/12  snapshotList=12  ballLabel=11/18  renderCalls=0  lastSig=null
+[tfb12] HOSTS=1  [h0] label='11/18' cls='tfb-ball tfb-active tfb-capsule'
+```
+
+`renderCalls=0` 是最硬的证据：新实例一次都没画过，屏幕上的数字必然属于别人。
+这与 `dsh-font-enhancer` 的 `#dsh-fe-root` 是同一类 bug（同源：`buildUI` 开头用
+「id 已存在就跳过」来防重复建 UI，但没分清那个元素是不是自己的）。
+
+**修复**：把「跳过」改成**归属判定** —— 只有当现存 host 的 shadow root 恰好是
+本实例持有的 `ui.shadow` 时才短路；否则视为上一代残留，`remove()` 后重建、
+并同步清空 `ui` 与 `lastBallSig`（否则重建后第一帧会被 `sig` 缓存判为「没变化」而跳过）。
+
+**验证**（真机探针，日志 `[tfb14]`，修复后）：
+
+```
+[tfb14] t5 hosts=1 ballState=5/10 snapshot=10 ballLabel=5/10
+[tfb14] t5 OFFICIAL='任务5 已完成 · 1 进行中 · 4 待处理'
+[tfb14] t5 dividers=1 divTxt='当前进度 · 5/10 完成'
+```
+
+`ballLabel` 与 `ballState` 终于一致；球数字 = 官方 10 条（5 完成 + 1 进行中 + 4 待处理）。
+
+### ✨ 新增：展开清单里「历史」与「当前进度」之间的分界线
+
+按「球上的数字只反映当前这一轮；展开的清单里既要有历史贡献、也要有官方最新清单，
+两段之间要有明显且美观的分界」的要求，`historySectionHtml()` 现在按此顺序渲染：
+
+```
+▾ 已完成历史 N 条      （可折叠，带 🧹）
+▸ 被抛弃的历史任务 N 条 （可折叠，带 🧹）
+───────── 当前进度 · 5/10 完成 ─────────   ← 新增分界线
+· 当前轮任务 1
+· 当前轮任务 2
+🧹 一键清理全部历史
+♻️ 一键恢复全部隐藏的历史
+```
+
+分界线由三段组成（`.tfb-divider` / `.tfb-divider-line` / `.tfb-divider-txt`）：
+两侧是两端渐隐的 1px 细线，中间是圆角小胶囊标签，两套皮肤各自配色；
+`pointer-events:none` 保证它不会挡住列表项点击。
+
+### 修复：`primary` 未持久化 + 同签名帧不修正边界
+
+两个配套缺陷，都会让「权威通道已生效」这件事在刷新后被忘掉：
+
+1. `persistSoon()` 存 `{todos, sig, at, snapLen}` 时漏了 `primary`，
+   `restorePersisted()` 恢复时也不设它 → 页面一刷新 `primary` 恒 `undefined`
+   → `hasPrimaryData()`（要求 `!!rec.primary`）恒 `false`
+   → **DOM fallback 的闸门永久敞开**，面板文本又会跨界污染快照。
+2. `setSessionTodos()` 的签名去重分支 `if (b && b.sig === sig) { b.stale = false; return false; }`
+   直接 early return，**不更新 `snapLen`** —— 被旧帧膨胀过的边界就此冻结，
+   即使之后每帧都是正确的权威数据也修不回来。
+
+现在：持久化与恢复都带 `primary`；同签名帧只要发现 `snapLen` 或 `primary` 不对，
+就地修正并重绘。
+
+### 文档：修正与实际功能不一致的描述
+
+- 皮肤数 `120` → **`128`**（实跑皮肤目录 IIFE：`ALL.length = 128`，另加「经典（旧版）」分组 6 款）
+- 纪律注入 `约 340 字 / 5 条` → **实测 498 字符 / 6 条规则**（`order=190` 不变）
+- 健康路由示例 `127.0.0.1:43120` → 改为「填你自己的端口」，并说明桌面端默认 `port: 0`
+  每次重启换端口、该路由只接受渲染进程请求（`curl` 会得到 `403 Browser access is disabled`）
+- 「watchdog 10 分钟后停止」补全主语：停的是**球的复活看门狗**（300 × 2s），
+  皮肤/可见性轮询刻意常驻
+
 ## 0.14.5 — 2026-10-18
 
 ### 修复：首工具判定 gate 的三处缺陷（合并社区 PR #1，作者 @WanchengWildMan）

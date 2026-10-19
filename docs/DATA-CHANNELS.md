@@ -12,7 +12,30 @@ so future maintainers can re-validate them against newer DSH versions.
 | View | `@deepseek-ai/dsh-client-ui-conversation` | Renders the `todos` projection as the plan strip above the composer (`section[data-testid="todo-panel"]`), collapsible; expanded it renders `ul > li[data-status]` with a content span; collapsed it renders only a localized counts label |
 | Tool row | `@deepseek-ai/dsh-client-ui-tool` | Renders the one-line `todo_write` conversation row (summary derived from call args) |
 
-## Channel A — DOM (primary)
+## Channel A — `sessions` service (authoritative)
+
+The client half declares `inject: ["sessions"]` and subscribes to the runtime's
+global session registry (`ctx.sessions.list.subscribe`, plus a 2 s pull as a
+safety net in case a callback stops firing after a shell rebuild).
+
+- This is the **primary** channel and it wins every disagreement.
+- `todo_write` is a **whole-list replacement**, so one frame from this channel is
+  the complete live plan. The snapshot boundary (`snapLen`) is therefore taken
+  from the frame length itself; everything merged in behind it is history and
+  must never be counted as live progress. (v0.14.6 removed the older monotonic
+  high-water mark, which never shrank and made the ball report `9/18` while the
+  official panel held 6 items.)
+- Frames are normalized (statuses filtered to `pending | in_progress |
+  completed`, blank contents dropped) and a signature (`status|content` joined)
+  makes identical lists no-ops.
+
+## Channel B — DOM panel (fallback only)
+
+**Strictly a fallback**: it only feeds the ball while the authoritative channel
+has produced nothing for this session (`hasPrimaryData(sid, rec)` returns early
+otherwise). Without that guard the two channels alternate on every observer tick
+and the ball flickers between the service's full list and whatever React has
+painted mid-render.
 
 - Selector: `[data-testid="todo-panel"]`
 - Expanded: `panel.querySelectorAll("ul li[data-status]")` →
@@ -22,8 +45,10 @@ so future maintainers can re-validate them against newer DSH versions.
   segments; both Arabic numerals and simple Chinese numerals (一/两/三…十) are
   supported. Count-only data is used solely as a last resort when no
   projection frame has been seen yet, because it cannot recover item contents.
+- The panel can never raise the snapshot boundary, and never sets one at all
+  when the service already gave us one.
 
-## Channel B — transport (fallback)
+## Channel C — transport tap (last resort)
 
 - `window.fetch` is wrapped once (`window.__dshtfbFetchPatched` guard):
   responses are cloned; binary-ish content types (javascript/font/image) are
@@ -42,13 +67,16 @@ so future maintainers can re-validate them against newer DSH versions.
 
 ## Normalization
 
-Both channels funnel into `setTodos`:
+All channels funnel into `setSessionTodos`:
 
 - items are filtered to `pending | in_progress | completed`;
 - blank/whitespace contents are dropped;
 - a signature (`status|content` joined) detects no-op updates;
 - rendering is fully re-computed from the normalized list (no incremental DOM
-  state).
+  state);
+- the snapshot boundary is `norm.length` for authoritative frames only — see
+  Channel A. Statistics (`done/total` on the face, the ring, the header summary)
+  count only `todos.slice(0, snapLen)`; the rest is archive.
 
 ## Stability notes
 

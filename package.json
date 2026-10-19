@@ -1,7 +1,7 @@
 {
   "name": "dsh-todo-float-ball",
-  "version": "0.14.5",
-  "description": "DSH todo 悬浮球：常驻可拖动悬浮球实时显示当前会话 todo_write 任务清单进度（总数/完成数/进行中），Shadow DOM 样式隔离，点击折叠/展开完整清单，状态颜色（待办灰/进行中橙脉动/完成绿）。数据双路同步：MutationObserver 抓官方 todo 面板为主 + 拦截会话投影帧为辅。双端可用（Desktop 桌面端 + Web 网页端）。",
+  "version": "0.14.6",
+  "description": "DSH todo 悬浮球：常驻可拖动悬浮球实时显示当前会话 todo_write 任务清单进度（完成数/总数/进行中任务名），带百分比进度环；Shadow DOM 样式隔离，点击折叠/展开完整清单，右键胶囊模式；状态颜色（待办蓝/进行中橙脉动/完成绿）。数据双路同步：权威会话投影帧为主 + MutationObserver 抓官方 todo 面板为辅，旧计划自动归档为历史不会被误算进进度。可固定多会话并排查看，128 款共享皮肤+6 款经典皮肤。宿主端每轮注入 todo 纪律并硬性要求首个工具调用为 todo_write。双端可用（Desktop 桌面端 + Web 网页端）。零遥测，仅一条本机回环健康路由。",
   "type": "module",
   "main": "lib/index.js",
   "sideEffects": false,
