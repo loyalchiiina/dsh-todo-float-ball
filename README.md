@@ -1,5 +1,10 @@
 # dsh-todo-float-ball
 
+> **功能描述**：强制每个 turn 先写 todo 清单并整表覆盖式重写，已完成项保留不删。悬浮球可看完整历史，含被插话打断后丢失的安排，干了什么、什么没干一目了然。适配 DSH 内核 0.2.2-rc.1。
+>
+> **English**: Forces a todo list at the start of every turn and rewrites it in full each time, so finished items stay listed instead of being replaced. The floating ball shows the complete history, including plans that were lost when you cut in mid-turn, so what got done and what got dropped is always clear. Adapts DSH kernel 0.2.2-rc.1.
+
+
 **AI 在跑长任务，计划清单却总在眼前消失？把它变成一颗常驻桌面的进度球。**
 
 把 DeepSeek Harness（DSH）的任务清单搬到桌面右下角的一颗悬浮球上：`已完成/总数` 常驻可见、当前进行中的任务名直接写在球面上，还能拖、能缩成胶囊、能换 130 款皮肤。
