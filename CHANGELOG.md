@@ -1,3 +1,7 @@
+## 1.0.1 — 2026-11-26
+
+- perf: 悬浮球可见性安全网轮询（2s）回调开头加 document.hidden 门控；窗口不可见时直接返回，不再每 2 秒跑一遍 applyBallVisibility / syncFromSessions / 主题与皮肤同步。理由 = 该定时器为永久常驻 safety net（旧 20 分钟上限被故意移除），后台时全是空转。
+
 # Changelog
 
 
