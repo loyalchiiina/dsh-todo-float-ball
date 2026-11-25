@@ -1,8 +1,8 @@
 # dsh-todo-float-ball
 
-> **功能描述**：强制每个 turn 先写 todo 清单并整表覆盖式重写，已完成项保留不删。悬浮球可看完整历史，含被插话打断后丢失的安排，干了什么、什么没干一目了然。适配 DSH 内核 0.2.2-rc.1。
+> **功能描述**：强制每个 turn 先写 todo 清单并整表覆盖式重写，已完成项保留不删。悬浮球可看完整历史，含被插话打断后丢失的安排，干了什么、什么没干一目了然。适配 DSH 内核 0.2.3+。**与官方「时间线」插件互斥：检测到其启用时本插件自动让位（停用纪律与硬门），避免 todo_write 被禁用导致死锁。**
 >
-> **English**: Forces a todo list at the start of every turn and rewrites it in full each time, so finished items stay listed instead of being replaced. The floating ball shows the complete history, including plans that were lost when you cut in mid-turn, so what got done and what got dropped is always clear. Adapts DSH kernel 0.2.2-rc.1.
+> **English**: Forces a todo list at the start of every turn and rewrites it in full each time, so finished items stay listed instead of being replaced. The floating ball shows the complete history, including plans that were lost when you cut in mid-turn, so what got done and what got dropped is always clear. Adapts DSH kernel 0.2.3+. Yields automatically to the official Timeline plugin when enabled.
 
 
 **AI 在跑长任务，计划清单却总在眼前消失？把它变成一颗常驻桌面的进度球。**
@@ -11,7 +11,7 @@
 
 [![npm](https://img.shields.io/badge/npm-dsh--todo--float--ball-cb3837?logo=npm)](https://www.npmjs.com/package/dsh-todo-float-ball)
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
-[![DSH](https://img.shields.io/badge/DSH-%E2%89%A5%200.1.7--rc.1-4f46e5)](https://github.com/loyalchiiina/dsh-todo-float-ball)
+[![DSH](https://img.shields.io/badge/DSH-%E2%89%A5%200.2.3-4f46e5)](https://github.com/loyalchiiina/dsh-todo-float-ball)
 
 [English](README-en.md) | 简体中文
 
@@ -221,10 +221,18 @@ http://127.0.0.1:<你当前的 DSH 端口>/dsh-todo-float-ball/health
 
 ## 适配版本
 
-- DSH 内核（`@deepseek-ai/dsh`）：**0.2.1-rc.3**（`package.json` 的 `engines.dsh` 已声明 `>=0.1.7-rc.1`）
-- DSH 桌面端：**2.0.20-next**（DSH NEXT）
+- DSH 内核（`@deepseek-ai/dsh`）：**0.2.3-alpha.2**（`package.json` 的 `engines.dsh` 已声明 `>=0.2.3-0`）
+- DSH 桌面端：**官方版 DeepSeek Harness 0.2.3-alpha.2**（desktop profile）
 - Node.js：`^22.19.0 || >=24.0.0`
-- 已在上述版本实测通过；低版本 `0.1.7-rc.1` 及以上兼容。
+- 已在上述版本实测通过；内核 0.2.3 及以上兼容。
+
+### 与官方「时间线」插件的关系（互斥让位）
+
+官方 `@deepseek-ai/dsh-timeline`（内核 0.2.3 起内置，实验性、默认关闭）开启后默认启用 **"Replace Todo tools"**，会禁用 `todo_write` 并用任务树接管进度；本插件的 todo 纪律与硬门依赖 `todo_write`。**两者同时启用会死锁，因此本插件 v1.0.0 起会自动让位**：
+
+- 检测到时间线插件启用时：不注入 todo 纪律段落、不注册 todo_write 硬门；悬浮球保留但仅作展示，鼠标悬停提示「已让位给官方时间线」。
+- 加载时序无关：即使时间线晚于本插件加载，硬门在每次工具调用前会动态复查，一旦时间线接管立即放行。
+- 若你改用官方时间线管理任务，无需卸载本插件；反之关闭时间线后，本插件的纪律与硬门自动恢复生效。
 
 ## 实现原理
 

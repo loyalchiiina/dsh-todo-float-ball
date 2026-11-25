@@ -245,15 +245,23 @@ No. The observer is debounced (200 ms), the transport tap only string-scans for 
 
 ## Compatibility & tested versions
 
-- DSH core (`@deepseek-ai/dsh`): **0.2.1-rc.3** (`engines.dsh` declares `>=0.1.7-rc.1`)
-- DSH desktop: **2.0.20-next** (DSH NEXT)
+- DSH core (`@deepseek-ai/dsh`): **0.2.3-alpha.2** (`engines.dsh` declares `>=0.2.3-0`)
+- DSH desktop: **official DeepSeek Harness 0.2.3-alpha.2** (desktop profile)
 - Node.js: `^22.19.0 || >=24.0.0`
-- Verified on the versions above; compatible with 0.1.7-rc.1 and newer.
+- Verified on the versions above; compatible with DSH core 0.2.3 and newer.
+
+### Relationship with the official Timeline plugin (mutual exclusion)
+
+The official `@deepseek-ai/dsh-timeline` (built into core 0.2.3, experimental, off by default) enables **"Replace Todo tools"** when turned on: it denies `todo_write` and takes over progress via task trees. This plugin's todo discipline and hard gate depend on `todo_write`. **Enabling both would deadlock, so as of v1.0.0 this plugin yields automatically**:
+
+- When Timeline is detected: no todo discipline prompt section and no `todo_write` hard gate are registered. The floating ball stays for display only, with a hover hint "yielded to official Timeline".
+- Load order independent: even if Timeline loads after this plugin, the gate re-checks before every tool dispatch and passes through the moment Timeline takes over.
+- You can keep this plugin installed while using official Timeline; turning Timeline off restores the discipline and hard gate automatically.
 
 ## Compatibility
 
 - DSH Desktop 2.x (desktop profile) and DSH web (web profile)
-- No `peerDependencies` — the plugin is self-contained and talks to DSH only through public DOM/HTTP surfaces
+- `peerDependencies`: `@deepseek-ai/cordis ^4.0.2`, `@deepseek-ai/dsh >=0.2.3-0`; the plugin otherwise talks to DSH through public service/DOM/HTTP surfaces
 
 ## License
 

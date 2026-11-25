@@ -1,6 +1,15 @@
 # Changelog
 
 
+## 1.0.0 (2026-11-25) — 稳定版
+
+### 适配最新内核 0.2.3 + 与官方「时间线」插件互斥让位
+
+- **内核适配声明**：`engines.dsh` / `peerDependencies` / `devDependencies` 的 dsh 下限从 `>=0.1.7-rc.1` 提高到 `>=0.2.3-0`（开放上限，不精确钉版）；README 注明适配内核 0.2.3+。
+- **冲突根因**：官方 `@deepseek-ai/dsh-timeline`（0.2.3-alpha.1 起）默认开启「Replace Todo tools」（`allowTodo:false`），对每个 agent 执行 `tools.restrict({ deny:["todo_write"] })` 并用 guard 拦截返回 `TIMELINE_TOOL_UNAVAILABLE`；本插件 v0.13.0 起的 `tools/pre-execute` 硬门强制每轮首调 todo_write —— 两者同开会死锁。
+- **让位机制（运行时自动）**：宿主端用与 timeline 官方同款的 `ctx.get("loader").entries()` 检测 `@deepseek-ai/dsh-timeline` / `@magolor/dsh-timeline` 是否启用。检测到则：①不注册 todo 纪律注入段落；②不注册 todo_write 硬门；③已注册的硬门在每次 dispatch 前动态复查，timeline 一旦接管立即放行（应对加载时序）。悬浮球 title 追加「已让位给官方时间线」提示，健康路由 `/dsh-todo-float-ball/health` 暴露 `timelineYielded` 状态。
+- **为什么是稳定版**：核心显示/皮肤/持久化/多会话能力已在 0.14.x 长期稳定，本次仅做内核适配与互斥让位，无功能删减，标记 1.0.0 稳定版。
+
 ## 0.14.12 (2026-11-16)
 
 ### 图标配色：写死品牌色，深色主题下不再看不清
